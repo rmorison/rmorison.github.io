@@ -61,8 +61,8 @@ enableCodeCopy = false
   showTermCount = true
 
 [fathomAnalytics]
-  # site = "ABC12345"
-  # domain = "llama.yoursite.com"
+  site = "WDRFPNAL"
+  domain = "rmorison.github.io"
 
 [verification]
   # google = ""
