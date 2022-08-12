@@ -33,6 +33,9 @@ My own personal organization needs are nearly full-virtual. Either I'm in a virt
 
 By the way, I do not mash up personal todos with my work as GTD encourages. I prefer a simpler in->due?->done for this part of my life. For personal work I use [[https://todoist.com/][Todoist]] for it's clean UX, mobile app, and sync across devices. Todoist recently added [[https://todoist.com/kanban-board][Kanban boards,]] so I may toy with a GTD-esque flow sans Emacs (which is a fiddly challenge to sync across devices.) That notwithstanding, I'll continue with my Emacs setup.
 
+*** Why Emacs?
+I admit, I've got years of Emacs key bindings in my fingers. But like playing the piano, practice makes plenty good. More keyboard, less mousing around many windows lends to good flow. I can now capture meeting notes, reference tidbits, fleeting ideas, and so on, with confidence I can forget them now, find them later, and fold follow ups into todo lists and projects plans.
+
 *** References
 The following works were highly influential in my own productivity thinking and, of course, this article. 
 - [[https://gettingthingsdone.com/][Getting Things Done]] by David Allen: This highly popular "work of the day" got me re-thinking about personal productivity again, and tweaking some of my own practice as a result.
@@ -40,24 +43,10 @@ The following works were highly influential in my own productivity thinking and,
 - [[https://www.edwardslingerland.com/trying-not-to-try][Trying Not To Try]] by Edward Slingerland: This trade book is very thought provoking if you have interest in the convergence of history, culture, religion, and creativity. Of most relevance here is the connection to "flow state". Every section of Slingerland's book got me thinking about my own creativity, workplace and historical bias, and where I fit on the spectrum between Confucius and Laozi. /Wu-wei/ ftw!
 - [[https://www.youtube.com/watch?v=VcgjTEa0kU4][Org Mode Basics]] and [[https://www.youtube.com/watch?v=PNE-mgkZ6HM][Organize Your Life with Org Mode]] (videos): [[https://systemcrafters.cc/][System Crafters]] is a great source of live code videos and one of the best ways to get into Emacs.
 
-** Still Interested?
-For me GTD, and various realizations of GTD in task tracking tools, are too micro for my needs. That's where Emacs org-mode steps in. Let me begin with what got me started using org-mode.
-
-*** Oh, I Need to Write That Down!
-Just about every day I come across something I need to record when I wasn't planning on recording anything. And I need to record it quickly, so I don't lose context of whatever's being discussed. Or, I'm deep into writing code, docs, or messages and a side thought pops into my head. I need to push the stack, record it, and pop back into what I was doing.
-
-Used to be (post paper notebook) I'd bring up a note taking app "real quick". I've tried a couple commercial web and platform apps and "real quick" just wasn't quick enough. Plus, I'd often be hit cognitive stress with, "Now where do I put this?" before or after finishing my note. GTD promises "stress free", but my stress started before organizing tasks and projects.
-
-As a software engineer, one thing was invariably true: I had a code editor up. More often than not, that editor was Emacs, which I use alongside more specialized IDEs for browsing large projects, shell access, text processing, etc. (/Emacs OS/, as it's called.) I started using the Emacs ~*scratch*~ buffer for quick note taking, and then copy it elsewhere later. (Or not: sometimes I'd forget!)
-
-I had used org-mode for outlines and generating markdown docs. It was just a matter of time for a "doh!" moment. I'd seen org-mode used as a calendar, but it was [[https://systemcrafters.cc/][System Crafters]] that really sparked the light bulb for me. After absorbing the copious and cryptic org-mode documentation, experimenting for a few weeks, I settled on the following system that's always just a ~M-TAB C-c c~ away.
-
-
-** Walk-through My Setup
-
-*** Emacs Setup
-If you're interested in my detailed Emacs config, i.e., ~init.el~ you can find my setup in my [[https://github.com/rmorison/dotfiles][GitHub dotfiles repo]]. My org-mode config started with [[https://www.youtube.com/watch?v=PNE-mgkZ6HM][Organize Your Life with Org Mode]]. If you're new to Emacs or org-mode, start there.
-
+** Emacs Config
+If you're interested in my detailed Emacs config, i.e., ~init.el~ you can find my setup in my [[https://github.com/rmorison/dotfiles][GitHub dotfiles repo]]. My Org-mode config started with [[https://www.youtube.com/watch?v=PNE-mgkZ6HM][Organize Your Life with Org Mode]]. If you're new to Emacs or Org-mode, start there.
+  
+** A Walk-through
 The rest of this doc is a walk-through with animated GIFs to illustrate.
 
 *** It All Starts with a Meeting
@@ -128,9 +117,9 @@ Later, I'll check my agenda, ~C-c a a~, arrow down to the ~BREAKDOWN-PLAN~ task,
 [[./img/plan-project.gif]]
 
 *** Refile Into Projects File, Set Deadlines, Tee up Tasks
-Refile is the gem of org-mode. I don't want to track and annotate my project in my meetings folder, that's not the way. I'm going to move the whole project outline to my projects folder.
+Refile is the gem of Org-mode. I don't want to track and annotate my project in my meetings folder, that's not the way. I'm going to move the whole project outline to my projects folder.
 
-~C-x C-f meetings.org~ to open my meetings file, arrow to the ~PLANNED~ project, and ~C-c C-w~ to invoke org-mode refile. 
+~C-x C-f meetings.org~ to open my meetings file, arrow to the ~PLANNED~ project, and ~C-c C-w~ to invoke Org-mode refile. 
 [[./img/refile-project.gif]]
 
 *** Prep and Schedule my Backlog
@@ -142,7 +131,7 @@ Finally I'll take some historical notes about Für Elise and put a link to those
 [[./img/note-taking.gif]]
 
 ** Features, Features, and more Features
-Emacs org-mode has a dizzying array of [[https://orgmode.org/features.html][features]] and this walk-through is only meant to capture the essence of how I org. I don't use all of these, but for reference, here goes...
+Emacs Org-mode has a dizzying array of [[https://orgmode.org/features.html][features]] and this walk-through is only meant to capture the essence of how I org. I don't use all of these, but for reference, here goes...
 - [[https://orgmode.org/manual/Tags.html][Tags]]
 - [[https://orgmode.org/manual/Tracking-your-habits.html][Habits]]
 - [[https://orgmode.org/manual/Clocking-Work-Time.html][Time tracking]]
