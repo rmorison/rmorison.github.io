@@ -106,7 +106,7 @@ WONTDO --> [*]
 #+end_src
 
 #+RESULTS:
-[[file:task-state-cover.png]]
+[[file:img/task-state-cover.png]]
 
 *** Review Backlog, Schedule Work
 ~C-c a b~ into my backlog view, I realize my task is a project, too big on its own. (I try to visit the backlog at least once a day.) I'm going to set the task to ~BREAKDOWN-PLAN~. (For example, I have to get a keyboard, buy the sheet music, hire a music teacher) and schedule the planning work for tomorrow.

@@ -6,7 +6,7 @@ tags = ["productivity", "personal-process"]
 draft = false
 topics = ["Emacs", "Org-mode"]
 description = "Emacs and Org-mode to track work, improve flow, and reduce (cognitive) stress"
-images = ["img/task-state-cover.png"]
+images = ["https://rm.rmdashrf.net/ox-hugo/task-state-cover.png"]
 +++
 
 ## How I Org {#how-i-org}
