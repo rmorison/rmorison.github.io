@@ -61,8 +61,8 @@ enableCodeCopy = false
   showTermCount = true
 
 [fathomAnalytics]
-  site = "DJNFAAFX"
-  domain = "rm.rmdashrf.net"
+  site = "DJNFAAFX0"
+  #domain = "rm.rmdashrf.net"
 
 [verification]
   # google = ""
