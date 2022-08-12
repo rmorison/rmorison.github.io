@@ -4,7 +4,7 @@
 * TODO Test tags and topics                                         :foo_tag:
 :PROPERTIES:
 :EXPORT_FILE_NAME: test-tags
-:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '(test fun "out doors")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '(test fun "out doors") 
 :END:
 
 ** Testing, 1 2 3
@@ -19,6 +19,8 @@ CLOSED: [2022-08-10 Wed 20:56]
 :PROPERTIES:
 :EXPORT_FILE_NAME: how-i-org
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '(Emacs "Org-mode")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Emacs and Org-mode to track work, improve flow, and reduce (cognitive) stress"
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :images '(img/task-state-cover.png)
 :END:
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2022-08-10 Wed 20:56]
@@ -67,7 +69,7 @@ When the meeting is over and I'm ready to finish the capture I'd normally hit ~C
 
 *** My Algorithm
 Now's a good time to highlight the tasks states I use and my typical path through them.
-#+begin_src mermaid :file img/gtd-states.png
+#+begin_src mermaid :file img/task-state-cover.png
 stateDiagram-v2
 BREAKDOWN: BREAKDOWN-PLAN
 INPROGRESS: IN-PROGRESS
@@ -104,7 +106,7 @@ WONTDO --> [*]
 #+end_src
 
 #+RESULTS:
-[[file:img/gtd-states.png]]
+[[file:task-state-cover.png]]
 
 *** Review Backlog, Schedule Work
 ~C-c a b~ into my backlog view, I realize my task is a project, too big on its own. (I try to visit the backlog at least once a day.) I'm going to set the task to ~BREAKDOWN-PLAN~. (For example, I have to get a keyboard, buy the sheet music, hire a music teacher) and schedule the planning work for tomorrow.

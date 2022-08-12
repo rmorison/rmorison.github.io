@@ -5,6 +5,8 @@ date = 2022-08-10T20:56:00-07:00
 tags = ["productivity", "personal-process"]
 draft = false
 topics = ["Emacs", "Org-mode"]
+description = "Emacs and Org-mode to track work, improve flow, and reduce (cognitive) stress"
+images = ["img/task-state-cover.png"]
 +++
 
 ## How I Org {#how-i-org}
@@ -65,7 +67,7 @@ When the meeting is over and I'm ready to finish the capture I'd normally hit `C
 
 Now's a good time to highlight the tasks states I use and my typical path through them.
 
-{{< figure src="/ox-hugo/gtd-states.png" >}}
+{{< figure src="/ox-hugo/task-state-cover.png" >}}
 
 
 ### Review Backlog, Schedule Work {#review-backlog-schedule-work}
