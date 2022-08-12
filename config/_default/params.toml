@@ -62,7 +62,7 @@ enableCodeCopy = false
 
 [fathomAnalytics]
   site = "WDRFPNAL"
-  #domain = "rmorison.github.io"
+  domain = "rm.rmdashrf.net"
 
 [verification]
   # google = ""
