@@ -20,7 +20,7 @@ CLOSED: [2022-08-10 Wed 20:56]
 :EXPORT_FILE_NAME: how-i-org
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '(Emacs "Org-mode")
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Emacs and Org-mode to track work, improve flow, and reduce (cognitive) stress"
-:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :images '(img/task-state-cover.png)
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :images '("https://rm.rmdashrf.net/ox-hugo/task-state-cover.png")
 :END:
 :LOGBOOK:
 - State "DONE"       from "TODO"       [2022-08-10 Wed 20:56]
