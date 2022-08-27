@@ -143,3 +143,111 @@ Emacs Org-mode has a dizzying array of [[https://orgmode.org/features.html][feat
 
 And of course, we're talking Emacs here. If you can code it in Elisp, you can do it.
 
+* TODO Climate References
+
+** A Quantitative Snapshot of the Human Impact on the Planet
+- [[https://www.caltech.edu/about/news/the-human-impact-on-the-environment][Press release]]
+- 
+- 
+
+** Aspiration and Imperative Global Partner on High-Quality Carbon Offset Projects
+- [[https://www.linkedin.com/pulse/aspiration-imperative-global-partner-high-quality-carbon-/][Press release]]
+*** About Imperative Global Group, Inc.
+#+begin_quote
+Imperative is a mission driven, boots-on-the-ground business focused on bringing excellence to carbon offset project development and operation and on producing ultra-high quality carbon offsets. Imperative brings together multi-decade experience in carbon and conservation projects, carbon markets, major project execution and emerging market, cross-border structuring and finance. In order to drive the largest and best possible climate, sustainable development and biodiversity outcomes, Imperative is focused on emerging markets and on project types with the greatest opportunities for scale.
+#+end_quote
+** Expert Voices: Aspiration CEO Andrei Cherny
+- [[https://www.axios.com/pro/climate-deals/2022/07/08/expert-voices-aspiration-ceo-andrei-cherny][Interview (subscriber only)]]
+* Source Material and Insitutional Policy Analyses of the Inflation Reduction Act
+* DONE Sprint 0.5: Planning a New Service Build
+CLOSED: [2022-08-27 Sat 01:06]
+:PROPERTIES:
+:EXPORT_FILE_NAME: sprint-0.5
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '("Software architecture" "Project management")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Sprint 0.5: uncovering the hidden work in a new service build"
+:END:
+
+** The Sprint 0.5 Scenario
+I often come across new, [[https://en.wikipedia.org/wiki/Greenfield_project][greenfield]] backend projects or [[https://en.wikipedia.org/wiki/Brownfield_(software_development)][brownfield]] rewrites of an existing service (usually a monolith) into a new service architecture (usually microservice), and a new infrastructure (cloud migration). It's common---and a best practice---to kick off such a project with a [[https://en.wikipedia.org/wiki/Application_discovery_and_understanding][discovery phase]], unless product requirements are already developed and well understood by the implementation team. The discovery phase is sometime called "Sprint 0", though it's often a much bigger time and effort investment than a common development sprint.
+
+It's also common to invest in some technical architecture and project planning during that discovery sprint. What I've observed in some projects is the technical planning in discovery is just enough for a modicum of work breakdown and estimation. Discovery typically delivers just enough design documentation for feature build tickets or story tasks. However, and especially for a greenfield build, all that planning leaves a host of implementation questions hanging.
+
+Are we set on language, libraries, and web stack? Have we agreed on code formatters, linters, static checkers? What are we using for CI/CD? Do we have a devops plan, to write infrastructure code and bring up multiple environments? And so on.
+
+Sometimes, when an experienced team implements in a familiar organization with established practices, these questions are mostly answered. More often, work such as this creates huge friction in the early sprints and divergence across teams working on different services. And even for the ready-to-roll team, it's worth going through a checklist, look for upgrade opportunities.
+
+The pressure to, "Get going with delivery", can be heavy.  But resist!…if there's a load of these non-recurring tasks hanging unresolved. Get them scheduled in, with full visibility.
+
+I call this /Sprint 0.5/ work: [[https://en.wikipedia.org/wiki/Non-recurring_engineering][NRE]] that has to be done, is better done at the beginning, and creates friction, disorganization, and divergence complexity of not done up front.
+
+** Refine the Architecture, Revisit the Plan
+When discovery phase technical architecture, planning and estimation is done, I believe it's worth coming back to at the end of Sprint 0.5. The team has a lot more "feel" for the implementation at this point and is likely to do a deeper dive into tickets and more accurate estimates.
+
+Or, better yet, only do the top level architecture and project breakdown, with minimal [[https://asana.com/resources/t-shirt-sizing][t-shirt size]] accuracy estimation during discovery. Save the deep dive until the tech work of Sprint 0.5 is done.
+
+Of course, commitment to stakeholders, budget and deadline pressure may make this untenable. But at least validate your discovery project plan and estimates. And if Sprint 0.5 estimates are significantly greater than those from discovery, well that's another problem.
+[[./img/brown_and_black_turtle_on_brown_sand-scopio-01f822e0-47d5-4952-b881-2331aa99c598.jpg]]
+
+** Sprint 0.5 Project Breakdown
+Here I offer a canonical work breakdown for a sprint 0.5. The epics breakdown are part of a more detailed breakdown in this [[https://docs.google.com/spreadsheets/d/1VmFfYiROtW4wktL4Exlz9NODEgOy4tTJb9lJS5lP9EE/edit?usp=sharing][Sprint 0.5 project breakdown]] Google sheet.
+
++---------------------------+----------------------------------------------------------------+
+|Epic                       |Tasks                                                           |
++---------------------------+----------------------------------------------------------------+
+|Service stack template(s)  |Select language, libraries, web stack for service and serverless|
+|                           |implementations; build out a "cookiecutter" template project;   |
+|                           |add standardized test runner, coverage, linters, static         |
+|                           |checkers, and formatters.                                       |
++---------------------------+----------------------------------------------------------------+
+|Continuous integration (CI)|Decide on CI (Jenkins, GH Actions, BB Pipelines, Travis,        |
+|                           |CircleCI); setup servers and/or runners; containerize template  |
+|                           |service(s); add test, lint, format to CI; add Dockerfile, CI to |
+|                           |templates                                                       |
++---------------------------+----------------------------------------------------------------+
+|Cloud infrastructure       |Build an environment in infrastructure with template service(s):|
+|                           |container strategy (orchestration, etc), networking, databases, |
+|                           |proxies, load balancers; implement with infrastructure code and |
+|                           |validate with env spinup                                        |
++---------------------------+----------------------------------------------------------------+
+|Continuous deployment (CD) |Establish branch/release/env SDLC strategy; connect service     |
+|                           |builds with env deploys                                         |
++---------------------------+----------------------------------------------------------------+
+|Logging & monitoring       |Setup logging, APM, trace in service stack and feed to central  |
+|                           |logging; setup service health checks; add anomaly alerting      |
+|                           |(Slack, SMS, Pagerduty)                                         |
++---------------------------+----------------------------------------------------------------+
+|Service architecture       |Design entities, APIs, async tasks, etc. for initial set of     |
+|                           |services, including registration/authentication                 |
++---------------------------+----------------------------------------------------------------+
+|Planning & estimating      |Use architecture level design for implementation stories,       |
+|                           |estimates, and scheduling                                       |
++---------------------------+----------------------------------------------------------------+
+|Initial build: sprint 1,2,…|At this point each service can drop a code template with CI/CD  |
+|                           |ready to go and start a sequence of delivery sprints            |
++---------------------------+----------------------------------------------------------------+
+
+** A Sprint 0.5 Gantt Chart
+As a practical matter of efficiency, much of Sprint 0.5 can be split among software architects, developers, and devops staff, allowing work in parallel, as suggested below.
+
+#+begin_src mermaid :file img/sprint-0.5-gantt.png
+gantt
+    title Sprint 0.5 Project Plan
+    dateFormat DD
+    axisFormat %d
+    section Discovery
+    Discovery           :discovery, 01, 2d
+    section Sprint 0.5
+    Service stack template(s) :templates, after discovery, 1d
+    Continuous integration (CI) :ci, after templates, 1d
+    Cloud infrastructure :infra, after discovery, 2d
+    Continuous deployment (CD) :cd, after infra, 1d
+    Logging & monitoring :logging, after cd, 1d
+    Service architecture :arch, after ci, 1d
+    Planning & estimating :planning, after arch, 1d
+    Sprint 0.5 complete :milestone, after planning
+    section Delivery
+    Sprint 1 :sprint1, after planning, 1d
+    Sprint 2 :sprint2, after sprint1, 1d
+#+end_src
+
+* How to Test a Cookiecutter
