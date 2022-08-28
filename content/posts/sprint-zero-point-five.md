@@ -2,6 +2,7 @@
 title = "Sprint 0.5: Planning a New Service Build"
 author = ["Rod Morison"]
 date = 2022-08-27T01:06:00-07:00
+aliases = ["/posts/sprint-0"]
 draft = false
 topics = ["Software architecture", "Project management"]
 description = "Sprint 0.5: uncovering the hidden work in a new service build"

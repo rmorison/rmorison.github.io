@@ -162,9 +162,10 @@ Imperative is a mission driven, boots-on-the-ground business focused on bringing
 * DONE Sprint 0.5: Planning a New Service Build
 CLOSED: [2022-08-27 Sat 01:06]
 :PROPERTIES:
-:EXPORT_FILE_NAME: sprint-0.5
+:EXPORT_FILE_NAME: sprint-zero-point-five
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '("Software architecture" "Project management")
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Sprint 0.5: uncovering the hidden work in a new service build"
+:EXPORT_HUGO_ALIASES: sprint-0
 :END:
 
 ** The Sprint 0.5 Scenario
