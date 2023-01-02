@@ -1,18 +1,6 @@
 #+hugo_base_dir: ../
 #+seq_todo: TODO NEXT DONE
-
-* TODO Test tags and topics                                         :foo_tag:
-:PROPERTIES:
-:EXPORT_FILE_NAME: test-tags
-:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '(test fun "out doors") 
-:END:
-
-** Testing, 1 2 3
-This is a test, it is only a test.
-
-More tests to come.
-
-*** And away we go!
+#+STARTUP: overview
 
 * DONE How I Org, A Software Engineer's Process                        :productivity:personal_process:
 CLOSED: [2022-08-10 Wed 20:56]
@@ -143,22 +131,6 @@ Emacs Org-mode has a dizzying array of [[https://orgmode.org/features.html][feat
 
 And of course, we're talking Emacs here. If you can code it in Elisp, you can do it.
 
-* TODO Climate References
-
-** A Quantitative Snapshot of the Human Impact on the Planet
-- [[https://www.caltech.edu/about/news/the-human-impact-on-the-environment][Press release]]
-- 
-- 
-
-** Aspiration and Imperative Global Partner on High-Quality Carbon Offset Projects
-- [[https://www.linkedin.com/pulse/aspiration-imperative-global-partner-high-quality-carbon-/][Press release]]
-*** About Imperative Global Group, Inc.
-#+begin_quote
-Imperative is a mission driven, boots-on-the-ground business focused on bringing excellence to carbon offset project development and operation and on producing ultra-high quality carbon offsets. Imperative brings together multi-decade experience in carbon and conservation projects, carbon markets, major project execution and emerging market, cross-border structuring and finance. In order to drive the largest and best possible climate, sustainable development and biodiversity outcomes, Imperative is focused on emerging markets and on project types with the greatest opportunities for scale.
-#+end_quote
-** Expert Voices: Aspiration CEO Andrei Cherny
-- [[https://www.axios.com/pro/climate-deals/2022/07/08/expert-voices-aspiration-ceo-andrei-cherny][Interview (subscriber only)]]
-* Source Material and Insitutional Policy Analyses of the Inflation Reduction Act
 * DONE Sprint 0.5: Planning a New Service Build
 CLOSED: [2022-08-27 Sat 01:06]
 :PROPERTIES:
@@ -251,4 +223,401 @@ gantt
     Sprint 2 :sprint2, after sprint1, 1d
 #+end_src
 
-* How to Test a Cookiecutter
+* DONE Bringup up Backstage (with Docker Compose)
+CLOSED: [2023-01-01 Sun 19:22]
+:PROPERTIES:
+:EXPORT_FILE_NAME: bringing-up-backstage
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '("Backstage" "Software architecture" "Docker")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "How to host a backstage.io instance with Docker compose"
+:END:
+** Backstage (for people in a hurry)
+*** Motivation
+This how-to covers a relatively lightweight hosting for [[https://backstage.io/][Backstage]], Spotify's open source developer portal.
+[[./img/black_and_gray_audio_mixer-scopio-243550cf-d8ba-4858-ac48-89a1eaa7681e.jpg]]
+
+Many of the challenges that emerge as an engineering team scales--from 5 to 15, then 15 to 50, just about every factor of 2 or 3--can be traced back to something that could have been done better in a previous stage. Those challenges include documentation, architecture, code layout, and, CI/CD practice, to name a few. As deficiencies in these are identified in past work they get lumped into the [[https://en.wikipedia.org/wiki/Technical_debt][tech debt]] basket.
+
+Does Backstage really help promote good engineering and beat back tech debt before it happens? I'm still at an experimental, proof of concept stage with Backstage, and hope to tackle that question in future articles.
+*** The Problem
+The [[https://backstage.io/docs/overview/what-is-backstage][Backstage docs]] are extensive, but hard to follow. Those docs jump back and forth between local configuration, plugin setups, plugin options, deployment suggestions, and more. I characterize the Backstage docs as everything, everywhere, all over the place! Maybe it's just me?
+
+Yes, there's a [[https://demo.backstage.io/catalog?filters%5Bkind%5D=component&filters%5Buser%5D=owned][Backstage demo site]] for a quick look. The [[https://backstage.io/docs/getting-started/][Backstage getting started]] section walks through bringing up a site locally. But collaboration is what Backstage is all about; I need a shared instance to really kick the tires. (There are excellent hosted service options, such as [[https://roadie.io/][Roadie]], if you have the budget.)
+
+So, what if you want to bring up Backstage for a small team, open source project, or a hackathon? I could not find a quick and easy setup for Backstage, something with modest effort before a =docker compose up= brings joy. The [[https://backstage.io/docs/deployment/][Backstage Deployment]] docs amount to helpful, but incomplete notes for bringing up a shared instance.
+** Scope
+This document walks through a Docker Compose setup for Backstage with its core features:  [[https://backstage.io/docs/features/techdocs/techdocs-overview][TechDocs]], [[https://backstage.io/docs/features/software-catalog/software-catalog-overview][Software Catalog]], and [[https://backstage.io/docs/features/software-templates/software-templates-index][Software Templates]]. In particular, the only infrastructure assumption is a publicly accessible, Docker ready server (AWS EC2, Digital Ocean, bare metal, etc.).
+
+In this setup there is no TechDocs reliance on cloud storage; TechDocs will be stored in a shared Docker volume and published from a CI workflow, analogous to [[https://backstage.io/docs/features/techdocs/configuring-ci-cd][Backstage's cloud storage]] recommended practice.
+** Tl;Dr
+If you're /really/ in a hurry and already familiar with building Backstage, head over to my [[https://github.com/rmorison/backstage-docker][backstage-docker]] repo. You can likely stitch things together from the minimal docs there.
+** What You'll Need
+- A GitHub account or organization
+- A server with [[https://docs.docker.com/engine/install/][Docker installed]]
+- A local "developer" system 
+** Step by step
+We'll walk through creating a new backstage app repository, configuring it for this setup, setting up CI/CD to build the app, the server hosting, and end with publishing CI for TechDocs.
+*** Prerequisites
+Install and configure all of the tools for local backstage dev, per the [[https://backstage.io/docs/getting-started/#prerequisites][Backstage prerequisites]].
+*** Create your app
+We'll call our app ~backstage-app~. In a shell, ~cd~ to where you'd like to setup this project, and
+#+begin_src shell
+  npx @backstage/create-app
+#+end_src
+and at the ~Enter a name for the app [required]~ prompt, enter ~backstage-app~ (or another name of your choosing).
+
+And with that, we have an app ready to run locally with ~yarn dev~. Developing on the local instance is covered in the [[https://backstage.io/docs/getting-started/configuration][Getting Started, configuring Backstage]] section. You can check your build and run locally with
+#+begin_src shell
+  cd backstage-app
+  yarn dev
+#+end_src
+
+This article doesn't cover developing for Backstage or [[https://backstage.io/docs/plugins/create-a-plugin][Backstage plugins]]. We'll move on to production configuration, CI/CD, and hosting.
+*** Create Repo and Push
+This guide uses GitHub Actions for CI. Create a new repo for ~backstage-app~ with an individual or organization owner. No need for any perfunctory files (README, .gitignore, license), as we'll push our app into this repo.
+
+[[./img/create-new-backstage-app-repo.png]]
+
+Setup the remote in your local ~backstage-app~ repo and push the initial commit (from the create-app script):
+#+begin_src shell
+  git remote add origin git@github.com:your-name-here/backstage-app.git
+  git branch -M main
+  git push -u origin main
+#+end_src
+**** Make sure ~yarn.lock~ is updated
+Backstage starts with an empty ~yarn.lock~ file. (If you ran ~yarn dev~ you probably filled this in.) Update and commit that file.
+#+begin_src shell
+  yarn build:all
+  git add yarn.lock
+  git commit -m 'lock js packages'
+#+end_src
+*** Docker Image CI
+With our repo up, we can setup a Docker image CI. Backstage ships with a Dockerfile we'll use in ~packages/backend/Dockerfile~. Note the ~CMD~ at the end of the Dockerfile.
+#+begin_src shell
+CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
+#+end_src
+
+Backstage will configure from ~app-config.yaml~ first and ~app-config.production.yaml~ second, the latter taking precedence. We'll edit ~app-config.production.yaml~ for our hosting.
+
+But first, let's setup CI. We'll borrow from the [[https://github.com/backstage/backstage/blob/master/.github/workflows/deploy_docker-image.yml][Backstage repo GitHub action]], with some changes...
+- remove yarn caching
+- change the ~on:~ section to build on push to ~main~ branch or via [[https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch][workflow_dispatch]] (so we can trigger a build on a feature branch)
+- build in ~.~ rather than ~./example-app~
+
+Create ~.github/workflows/deploy_docker-image.yaml~, copying from [[https://github.com/rmorison/backstage-app/blob/main/.github/workflows/deploy_docker-image.yaml][deploy_docker-image.yaml]].
+
+Add to the repo and push
+#+begin_src shell
+  git add .github/workflows/deploy_docker-image.yaml
+  git commit -m 'Workflow: Build and push Docker image'
+  git push
+#+end_src
+
+That should kick off a build.
+[[./img/test-backstage-app-build-workflow.png]]
+
+After 4-5 minutes you should see the workflow complete and can visit repo packages (look for the Packages section in the repo home screen):
+[[./img/backstage-app-image-in-ghcr.png]]
+
+*** App Config
+Make the following config changes in ~app-config.production.yaml~.
+
+**** Edit ~app~ and ~organization~
+Set the ~app~ ~title~ to your liking, ~baseUrl~ to ~https://${BACKSTAGE_DOMAIN}~; and the ~organization~ ~name~ as you like.
+#+begin_src yaml
+  app:
+    title: My Backstage App
+    baseUrl: https://${BACKSTAGE_DOMAIN}
+
+  organization:
+    name: My Organization
+#+end_src
+
+**** Edit ~backend~
+Change the ~backend~ ~baseUrl~ and ~listen~ sections as follows, leaving the ~database~ section as is
+#+begin_src yaml
+  backend:
+    baseUrl: https://${BACKSTAGE_DOMAIN}
+    listen:
+      port: '7007'
+      host: '0.0.0.0'
+
+    database:
+      client: pg
+      connection:
+        host: ${POSTGRES_HOST}
+        port: ${POSTGRES_PORT}
+        user: ${POSTGRES_USER}
+        password: ${POSTGRES_PASSWORD}
+#+end_src
+
+**** Edit ~catalog~
+Replace the ~catalog~ section with
+#+begin_src yaml
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template, User, Group]
+#+end_src
+Later, you may want to come back and add standard locations for some entity types, Users and Groups for example. But keep it simple for now, until the system is up and running.
+
+**** Edit ~techdocs~
+[[https://backstage.io/docs/features/techdocs/techdocs-overview][TechDocs]] is Backstage's "docs as code" framework. TechDocs Markdown documents under a repository's ~docs~ tree and publishes it to a browsable, searchable documentation site. We'll setup CI/CD per the [[https://backstage.io/docs/features/techdocs/architecture#recommended-deployment][TechDocs recommended deployment]], except that the publish step will be replaced by secure copy to a volume in the Backstage Docker cluster, instead of cloud storage.
+
+That means the ~techdocs~ section ~builder~ should be set to ~external~. The ~publisher~ section needs to point at a local directory path. Append the following to ~app-config.production.yaml~
+#+begin_src yaml
+  techdocs:
+    builder: 'external'
+    publisher:
+      type: 'local'
+      local:
+        publishDirectory: ${TECHDOCS_DIR}
+#+end_src
+We'll setup a TechDocs publish action later.
+
+**** Commit and Push
+That's our production config. Your config should look like [[https://github.com/rmorison/backstage-app/blob/main/app-config.production.yaml][app-config.production.yaml]]; when you're ready, add, commit, and push.
+#+begin_src shell
+  git add app-config.production.yaml
+  git commit -m "Production app config"
+  git push
+#+end_src
+The "Build and push Docker image" action should trigger, check when done for status.
+
+*** Update Backstage Catalog, Setup TechDocs
+
+**** Update ~catalog-info.yaml~
+The app was created with a scaffolded ~catalog-info.yaml~, which needs some edits. We'll also add TechDocs support and a simple doc to validate the build.
+
+In the ~metadata~ section, change ~description~ to your repo description (or whatever you like).
+
+Uncomment the ~annotations~ section. Change the ~github.com/project-slug~ to your repo path (minus the github.com part) and leave ~backstage.io/techdocs-ref~ as is (~dir:.~).
+
+Under ~spec~ change ~owner~ to your Github id (recommended) or email. You can change this once you settle on an identity scheme, which is a topic for another day.
+
+Your ~catalog-info.yaml~ should look like
+#+begin_src yaml
+  apiVersion: backstage.io/v1alpha1
+  kind: Component
+  metadata:
+    name: backstage-app
+    description: My Backstage application.
+    annotations:
+      github.com/project-slug: my-github-id/backstage-app
+      backstage.io/techdocs-ref: dir:.
+  spec:
+    type: website
+    owner: my-github-id
+    lifecycle: experimental
+#+end_src
+
+**** Setup TechDocs
+In addition to the ~backstage.io/techdocs-ref: dir:.~ in ~catalog-info.yaml~, TechDocs requires a ~mkdocs.yml~. Add that file to the top of your repo with the following
+#+begin_src yaml
+  site_name: 'backstage-app'
+
+  nav:
+    - Home: index.md
+
+  plugins:
+    - techdocs-core
+
+  markdown_extensions:
+    - markdown_inline_mermaid
+#+end_src
+
+Add some documentation, create ~docs/index.md~ with
+#+begin_src markdown
+  # Hello World!
+
+  ```mermaid
+  sequenceDiagram
+      Alice->>John: Hello John, how are you?
+      John-->>Alice: Great!
+      Alice-)John: See you later!
+  ```	
+#+end_src
+
+**** Commit and Push
+#+begin_src shell
+  git add catalog-info.yaml mkdocs.yml docs
+  git commit -m "Update catalog-info, add TechDocs"
+  git push
+#+end_src
+
+*** Docker Compose Setup
+With our Docker image built, time to get it running on a server. We'll use the ~docker-compose.yml~ I've built in the [[https://github.com/rmorison/backstage-docker][backstage-docker repo]]. The configuration instructions are documented there, so we'll just mimic the [[https://github.com/rmorison/backstage-docker#step-by-step][Step by Step]] here. Be sure to review [[https://github.com/rmorison/backstage-docker#env-docs][env setup]] carefully, most problems result from errors there. On your server
+#+begin_src shell
+  git clone git@github.com:rmorison/backstage-docker.git
+  cd backstage-docker
+  cp sample.env .env
+  vi .env
+  sudo apt install --yes apache2-utils
+  htpasswd -bn backstage change-this-password >>.htpasswd
+#+end_src
+
+Before you bring up your, be sure to point a domain name at your server's public IP address. The Let's Encrypt ssl cert validation will fail if you don't.
+
+With that done,
+#+begin_src shell
+  docker compose up --build
+#+end_src
+and try accessing your new server from a browser. Test your new backstage by adding the backstage-app component: hit "Create...", then "REGISTER EXISTING COMPONENT", then enter the url to your ~catalog-info.yaml~ file.
+[[./img/register-existing-component.png]]
+
+If all is good, you should have a registered backstage component, like
+[[./img/backstage-app-component.png]]
+
+However, if you click on the "VIEW TECHDOCS" link, you'll get an error.
+[[./img/techdocs-someone-dropped-the-mic.png]]
+
+Adding our component doesn't automatically publish its TechDocs, since we've chosen an external builder (in ~app-config.production.yaml~), so that's on us.
+
+Next, we'll setup a Github Action to publish to our compose cluster.
+
+*** TechDocs Publish CI
+
+The external builder setting in ~app-config.production.yaml~ is the Backstage recommended practice. But that means each repo with TechDocs needs a publish CI setup. We'll create a ~techdocs.yaml~ workflow, fashioned after [[https://backstage.io/docs/features/techdocs/configuring-ci-cd#example-github-actions-ci-and-aws-s3][Example: GitHub Actions CI and AWS S3]]. We'll replace AWS S3 storage with an ~scp~ and swap out the PlantUML support, in favor of [[https://mermaid.js.org/#/][MermaidJS]]. (Mermaid is a diagramming tool that is also [[https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/][supported in Github Markdown rendering]].) Note that Backstage's [[https://backstage.io/docs/features/techdocs/how-to-guides#how-to-add-mermaid-support-in-techdocs][How to add Mermaid support in TechDocs]] procedure uses a separate [[https://kroki.io/][Kroki]] server, which we don't follow here, favoring a simpler "full static" approach.
+
+Create ~.github/workflows/techdocs.yaml~, and copy in the contents of this [[https://github.com/rmorison/backstage-app/blob/main/.github/workflows/techdocs.yaml][techdocs.yaml]].
+
+The one workflow step to note---and the most common source of errors---is the "Publish docs site via scp" step. The Docker cluster has a SSH service running on port 2222, which needs to be open on the firewall to your server. That SSH service can write to the Docker volume where Backstage looks for TechDocs, if you recall the ~techdocs~ section of our config. (That OpenSSH server is configured [[https://github.com/rmorison/backstage-docker/blob/main/docker-compose.yml#L62][here]] in the compose file, in case you're looking.)
+#+begin_src yaml
+      - name: Publish docs site via scp
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.TECHDOCS_HOST }}
+          key: ${{ secrets.TECHDOCS_SSH_PRIVATE_KEY }}
+          username: techdocs
+          port: 2222
+          source: site
+          target: /techdocs/${{ env.ENTITY_NAMESPACE }}/${{ env.ENTITY_KIND }}/${{ env.ENTITY_NAME }}
+          strip_components: 1
+          rm: true
+#+end_src
+Note the two secrets. These go in your Github repo action secrets. ~TECHDOCS_HOST~ is the domain name pointing at your server.
+
+If you followed the [[https://github.com/rmorison/backstage-docker#techdocs-publish-ssh-keypair][TechDocs Publish SSH Keypair]] section you already have the private key. (If not, do that now, and update your ~.env~ with the *public* key, restart your cluster.) The ~TECHDOCS_SSH_PRIVATE_KEY~ in your repo actions secrets gets the contents of the private key file, ~techdocs_rsa~. 
+
+And finally, note ~target:~. This value has to be just right for Backstage to find TechDocs. In particular, ~ENTITY_KIND~ must be lower case, which you'll see a previous action step for.
+
+With that, commit, push, watch the action run, and try "VIEW TECHDOCS" again.
+#+begin_src shell
+  git add .github/workflows/techdocs.yaml
+  git commit -m 'Workflow: Publish docs site via scp'
+  git push
+#+end_src
+
+If all goes well...
+[[./img/techdocs-works-yay.png]]
+
+If not, it's time to debug.
+** Are we done yet?
+Backstage absolutely has a cost of ownership. The goal of this article is to make quick self hosting palatable for small projects and teams. If a Backstage adoption is successful and the team or scope grows, maintaining and evolving Backstage is a full time job. Again, there are excellent hosted versions, like [[https://roadie.io/][Roadie]], if you have a budget.
+
+Is the value proposition worth it? That's a topic for another day.
+
+* TODO Running TechDocs locally
+When writing docs it's often desirable to see them rendered before published. The Backstage project provides a [[https://github.com/backstage/techdocs-container][techdocs-container]] that can build and serve locally, but it does not include Mermaid support. We'll run [[https://backstage.io/docs/features/techdocs/cli][techdocs-cli]] locally, outside Docker. You'll need to install [[https://www.mkdocs.org/][Mkdocs]], a Python app, with TechDocs and Mermaid support.
+
+** TechDocs local setup requirements
+
+- This setup assumes a Python 3 installation, [[https://github.com/pyenv/pyenv][pyenv]] recommended, but any working Python 3 setup will do.
+
+- We'll use [[https://pypa.github.io/pipx/][pipx]] to install and extend Mkdocs. (Pipx installs Python apps each in their own virtual package environment, thus avoiding any package compatibility conflict with other Python apps.)
+
+** Install TechDocs and Mermaid CLIs
+#+begin_src shell
+  npm install -g @techdocs/cli
+  npm install -g @mermaid-js/mermaid-cli
+#+end_src
+
+** Install pipx with TechDocs and Mermaid support
+#+begin_src shell
+  pipx install mkdocs==1.*
+  pipx inject mkdocs mkdocs-techdocs-core==1.*
+  pipx inject mkdocs markdown-inline-mermaid==1.*
+#+end_src
+
+** Setup TechDocs in your backstage-app repo
+Per [[https://backstage.io/docs/features/techdocs/creating-and-publishing#enable-documentation-for-an-already-existing-entity][Enable documentation for an already existing entity]]
+- Create an ~mkdocs.yml~, including the Mermaid plugin
+  #+begin_src yaml
+    site_name: 'backstage-app'
+
+    nav:
+      - Home: index.md
+
+    plugins:
+      - techdocs-core
+
+    markdown_extensions:
+      - markdown_inline_mermaid
+  #+end_src
+- Update ~catalog-info.yaml~
+  #+begin_src yaml
+    metadata:
+      annotations:
+        backstage.io/techdocs-ref: dir:.
+  #+end_src
+  - Create documentation, in ~docs/index.md~
+  #+begin_src markdown
+    # Hello World!
+
+    ```mermaid
+    sequenceDiagram
+        Alice->>John: Hello John, how are you?
+        John-->>Alice: Great!
+        Alice-)John: See you later!
+    ```	
+  #+end_src
+- Serve docs
+  #+begin_src shell
+    techdocs-cli serve --no-docker
+  #+end_src
+
+* TODO Backstage, an Engineering Collaboration Framework
+
+** For Management
+After finally wrapping my head around Backstage, I think it's miscast. Or at least, mismarketed, to engineering managers. The problem may lie in the fact it's an engineering management tool for engineers. Engineering managers don't typically think this way: how can I make my engineers more productive when they work with other engineers in the organization.
+
+In fact, Backstage is going to succeed where engineers---and more progressive engineering managers---buy into engineers managing up and out. The metric of success, in my opinion, the KPI if you must, is whether every engineer on every team is utilizing, contributing to, and thinking about their Backstage presence every day.
+
+Backstage is a collaboration framework for engineering across teams. That puts backstage in a tricky position. It's core data is developed, written and maintained by engineers. However, Backstage needs support across teams for its implementation. And 
+
+* TODO Emacs IDE FTW
+:PROPERTIES:
+:EXPORT_FILE_NAME: emacs-ide-ftw
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '(Emacs Python Go)
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Emacs as an IDE: LSP and DAP turns Emacs into an IDE (with a little elbow grease)"
+:END:
+* TODO Local Hero, A Retrospective Review
+
+** We need each other (connection)
+
+** The egoist's life, well lived
+
+** Urban life, challenged with alternatives
+
+** Rustic life, wishing on a dream
+
+** A man of faith, an African, not a Scotsman
+
+** Born to roam
+* TODO Climate References
+
+** A Quantitative Snapshot of the Human Impact on the Planet
+- [[https://www.caltech.edu/about/news/the-human-impact-on-the-environment][Press release]]
+- 
+- 
+
+** Aspiration and Imperative Global Partner on High-Quality Carbon Offset Projects
+- [[https://www.linkedin.com/pulse/aspiration-imperative-global-partner-high-quality-carbon-/][Press release]]
+*** About Imperative Global Group, Inc.
+#+begin_quote
+Imperative is a mission driven, boots-on-the-ground business focused on bringing excellence to carbon offset project development and operation and on producing ultra-high quality carbon offsets. Imperative brings together multi-decade experience in carbon and conservation projects, carbon markets, major project execution and emerging market, cross-border structuring and finance. In order to drive the largest and best possible climate, sustainable development and biodiversity outcomes, Imperative is focused on emerging markets and on project types with the greatest opportunities for scale.
+#+end_quote
+** Expert Voices: Aspiration CEO Andrei Cherny
+- [[https://www.axios.com/pro/climate-deals/2022/07/08/expert-voices-aspiration-ceo-andrei-cherny][Interview (subscriber only)]]
+* TODO How to Test a Cookiecutter
