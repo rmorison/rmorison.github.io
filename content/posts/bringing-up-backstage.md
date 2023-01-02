@@ -306,7 +306,7 @@ With our Docker image built, time to get it running on a server. We'll use the `
 On your server
 
 ````shell
-git clone git@github.com:rmorison/backstage-docker.git
+git clone https://github.com/rmorison/backstage-docker.git
 cd backstage-docker
 cp sample.env .env
 vi .env
@@ -385,3 +385,21 @@ If not, it's time to debug.
 Backstage absolutely has a cost of ownership. The goal of this article is to make quick self hosting palatable for small projects and teams. If a Backstage adoption is successful and the team or scope grows, maintaining and evolving Backstage is a full time job. Again, there are excellent hosted versions, like [Roadie](https://roadie.io/), if you have a budget.
 
 Is the value proposition worth it? That's a topic for another day.
+
+
+## Pulling a New Backstage Build {#pulling-a-new-backstage-build}
+
+Standard Docker stuff, but for reference
+
+````shell
+docker compose stop backstage \
+    && docker compose rm -f backstage \
+    && docker compose pull backstage \
+    && docker compose up -d backstage
+docker compose logs -f backstage
+````
+
+
+## Questions or Issues? {#questions-or-issues}
+
+Post in [backstage-app discussions](https://github.com/rmorison/backstage-app/discussions) or [backstage-docker discussions](https://github.com/rmorison/backstage-docker/discussions).
