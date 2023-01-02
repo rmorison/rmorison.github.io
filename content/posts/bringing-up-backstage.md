@@ -144,15 +144,19 @@ Make the following config changes in `app-config.production.yaml`.
 
 #### Edit `app` and `organization` {#edit-app-and-organization}
 
-Set the `app` `title` to your liking, `baseUrl` to `https://${BACKSTAGE_DOMAIN}`; and the `organization` `name` as you like.
+In the `app` seciton set `title` to  `${BACKSTAGE_APP_TITLE}` env var and `baseUrl` to `https://${BACKSTAGE_DOMAIN}`.
+
+In the `organization` section set `name` to `${BACKSTAGE_ORGANIZATION_NAME}`.
+
+These will be configured from Docker Compose environment settings.
 
 ```yaml
 app:
-  title: My Backstage App
+  title: ${BACKSTAGE_APP_TITLE}
   baseUrl: https://${BACKSTAGE_DOMAIN}
 
 organization:
-  name: My Organization
+  name: ${BACKSTAGE_ORGANIZATION_NAME}
 ```
 
 
@@ -297,7 +301,9 @@ git push
 
 ### Docker Compose Setup {#docker-compose-setup}
 
-With our Docker image built, time to get it running on a server. We'll use the `docker-compose.yml` I've built in the [backstage-docker repo](https://github.com/rmorison/backstage-docker). The configuration instructions are documented there, so we'll just mimic the [Step by Step](https://github.com/rmorison/backstage-docker#step-by-step) here. Be sure to review [env setup](https://github.com/rmorison/backstage-docker#env-docs) carefully, most problems result from errors there. On your server
+With our Docker image built, time to get it running on a server. We'll use the `docker-compose.yml` I've built in the [backstage-docker repo](https://github.com/rmorison/backstage-docker). The configuration instructions are documented there, so we'll just mimic the [Step by Step](https://github.com/rmorison/backstage-docker#step-by-step) here. Be sure to review [env setup](https://github.com/rmorison/backstage-docker#env-docs) carefully, most problems trace back to a setting in that file.
+
+On your server
 
 ````shell
 git clone git@github.com:rmorison/backstage-docker.git
@@ -308,7 +314,7 @@ sudo apt install --yes apache2-utils
 htpasswd -bn backstage change-this-password >>.htpasswd
 ````
 
-Before you bring up your, be sure to point a domain name at your server's public IP address. The Let's Encrypt ssl cert validation will fail if you don't.
+Before you bring up your server, be sure to point a domain name at your server's public IP address. The Let's Encrypt ssl cert validation will fail if you don't.
 
 With that done,
 
@@ -316,7 +322,9 @@ With that done,
 docker compose up --build
 ````
 
-and try accessing your new server from a browser. Test your new backstage by adding the backstage-app component: hit "Create...", then "REGISTER EXISTING COMPONENT", then enter the url to your `catalog-info.yaml` file.
+and try accessing your new server from a browser.
+
+Test your new backstage by adding the backstage-app component: hit "Create...", then "REGISTER EXISTING COMPONENT", then enter the url to your `catalog-info.yaml` file.
 ![](/ox-hugo/register-existing-component.png)
 
 If all is good, you should have a registered backstage component, like
