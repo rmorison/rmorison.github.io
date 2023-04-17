@@ -1,5 +1,5 @@
 #+hugo_base_dir: ../
-#+seq_todo: TODO NEXT DONE
+#+seq_todo: TODO NEXT IN-PROGRESS DONE
 #+STARTUP: overview
 
 * DONE How I Org, A Software Engineer's Process                        :productivity:personal_process:
@@ -536,6 +536,753 @@ Standard Docker stuff, but for reference
 #+end_src
 ** Questions or Issues?
 Post in [[https://github.com/rmorison/backstage-app/discussions][backstage-app discussions]] or [[https://github.com/rmorison/backstage-docker/discussions][backstage-docker discussions]].
+* DONE Tame the Viper: Golang CLI Settings with Cobra & Viper
+CLOSED: [2023-04-16 Sun 21:55] SCHEDULED: <2023-04-13 Thu>
+:PROPERTIES:
+:EXPORT_FILE_NAME: tame-the-viper
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '("Golang" "Viper" "Cobra")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "A working introduction to Cobra and Viper, a CLI configuration module for Golang apps"
+:END:
+** What are Cobra & Viper?
+Golang comes with a [[https://pkg.go.dev/flag][flag package]] out of the box to parse garden variety command line flags. Many applications will want to use environment variables, particularly if they follow [[https://12factor.net/][Twelve-Factor App]] guidelines. The builtin [[https://pkg.go.dev/os][os package]] provides basic support. [[https://pkg.go.dev/github.com/joho/godotenv][GoDotEnv]] is a popular package with more functionality built in.
+
+Otoh, [[https://github.com/spf13/cobra][Cobra]] & [[https://github.com/spf13/viper/][Viper]] take configuration to the next level, combining CLI flags, environment, and a config file with support for most popular formats:
+- JSON, TOML, YAML, HCL, envfile and Java properties config files
+  (from [[https://github.com/spf13/viper/#what-is-viper][What is Viper?]])
+Viper's 45k "Imported by" stat shows the package's wide popularity among Go devs. And Cobra comes with a handy [[https://github.com/spf13/cobra-cli][Cobra Generator]] tool of it's own, to scaffold the code for new argument based CLI commands.
+
+** The Problem with Viper...
+[[./img/green_and_black_snake_illustration-scopio-35afd1bf-d3e4-4cff-8e75-c3b7b83ccf9e.jpg]]
+
+The first and biggest blocker to using Viper is documentation. [[https://github.com/spf13/viper/blob/master/README.md][Viper's Github README]] has breadcrumbs, but Viper needs a user manual. This document aspires to that.
+
+** What's on the Menu
+We'll tackle Cobra + Viper features in three steps
+1. Command line flags
+2. Add environment vars
+3. Marshal the config into a Go struct
+
+All of the code examples here are in this tame-the-viper repo.
+
+** Getting Started
+*** GitHub Repo for This Guide
+The code used in this guide is available in the [[https://github.com/rmorison/tame-the-viper][tame-the-viper repo]].
+
+*** Assumptions
+You'll need a working Go development environment. Go's [[https://go.dev/doc/install][Download and install]] instructions are great. Personally, I use the [[https://github.com/stefanmaric/g][stefanmaric/g]] version manager to manage my Go compilers.
+
+This walk-through was developed with ~1.19.1~
+#+begin_src shell
+  ~/Projects/github.com/rmorison/tame-the-viper   main $ g list
+
+  1.17 
+  1.17.3 
+  1.17.4 
+  1.17.5 
+  > 1.19.1 
+#+end_src
+
+*** Cobra-CLI
+We'll use the handy cobra-cli to generate code for new commands. This tool saves time and provides consistent starting structure.
+#+begin_src shell
+  go install github.com/spf13/cobra-cli@latest
+#+end_src
+
+*** Go Mod Init
+If you're coding along at home, you'll want to replace the Github account name here and throughout the Go imports.
+
+We start a project with
+#+begin_src shell
+  mkdir tame-the-viper
+  cd tame-the-viper
+  go mod init github.com/rmorison/tame-the-viper
+#+end_src
+
+** Command Line Flags
+*** First Steps
+We're going to lay down first code with ~cobra-cli init~. Let's take a look at that tool's options with
+#+begin_src shell
+  cobra-cli --help
+#+end_src
+which gives
+#+begin_src shell
+  Cobra is a CLI library for Go that empowers applications.
+  This application is a tool to generate the needed files
+  to quickly create a Cobra application.
+
+  Usage:
+  cobra-cli [command]
+
+  Available Commands:
+  add         Add a command to a Cobra Application
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  init        Initialize a Cobra Application
+
+  Flags:
+  -a, --author string    author name for copyright attribution (default "YOUR NAME")
+  --config string    config file (default is $HOME/.cobra.yaml)
+  -h, --help             help for cobra-cli
+  -l, --license string   name of license for the project
+  --viper            use Viper for configuration
+
+  Use "cobra-cli [command] --help" for more information about a command.
+#+end_src
+
+We can use command line flags to set an author and license to drop into our new project , but instead lets take advantage ~cobra-cli~'s config file support. Create a ~.cobra.yaml~ file with
+#+begin_src yaml
+  author: Snake Charmer
+  license: MIT
+  useViper: true
+#+end_src
+Note the ~useViper~ setting. You can use Cobra without Viper, but Viper is where the real power lies. I always use them together.
+
+Initialize your CLI project with
+#+begin_src shell
+  cobra-cli --config .cobra.yaml init
+#+end_src
+You should see
+#+begin_src shell
+  Using config file: .cobra.yaml
+  Your Cobra application is ready at
+  /home/rod/Projects/github.com/rmorison/tame-the-viper
+#+end_src
+and with ~ls *~
+#+begin_src shell
+  LICENSE  go.mod  go.sum  main.go
+
+  cmd/:
+  root.go
+#+end_src
+
+You can run
+#+begin_src shell
+  go mod tidy
+  go run main.go
+#+end_src
+and see help text that you'll want to replace in the generated files:
+#+begin_src shell
+  A longer description that spans multiple lines and likely contains
+  examples and usage of using your application. For example:
+
+  Cobra is a CLI library for Go that empowers applications.
+  This application is a tool to generate the needed files
+  to quickly create a Cobra application.
+#+end_src
+
+No big deal, but it gets better.
+
+*** Add a Command
+Lets add our first command, ~walk-dogs~. The ~cobra-cli~ builds a nice stub with
+#+begin_src shell
+  cobra-cli --config .cobra.yaml add walkDogs
+#+end_src
+and you'll see a new file, ~cmd/walkDogs.go~. The ~go run main.go --help~ now shows that command
+#+begin_src shell
+  Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  walkDogs    A brief description of your command
+#+end_src
+
+Let's look at the code generated for that new command. The top of ~cmd/walkDogs.go~ starts with
+#+begin_src go
+  /*
+     Copyright © 2023 Snake Charmer
+
+     Permission is hereby granted, free of charge, to any person obtaining a copy
+#+end_src
+That text is gratis the ~.cobra.yaml~ config file we're using. Front matter like this can be further customized per [[https://github.com/spf13/cobra-cli#configuring-the-cobra-generator][Configuring the cobra generator]]. 
+
+Further down is the spec for our command:
+#+begin_src go
+  var walkDogsCmd = &cobra.Command{
+          Use:   "walkDogs",
+          Short: "A brief description of your command",
+          Long: `A longer description that spans multiple lines and likely contains examples
+  and usage of using your command. For example:
+
+  Cobra is a CLI library for Go that empowers applications.
+  This application is a tool to generate the needed files
+  to quickly create a Cobra application.`,
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("walkDogs called")
+          },
+  }
+#+end_src
+
+One thing I typically change is the ~Use:~ value of the cobra command. The Cobra generator uses [[https://en.wikipedia.org/wiki/Camel_case][camel case]] for its command argument to support shells that have a problem with ~-~ in command strings. I don't write apps for those shells and the Unix shells I do implement for are fine with a command like ~walk-dogs~, which I prefer for readability and aesthetics.
+
+Easy to change:
+#+begin_src go
+          Use:   "walk-dogs",
+#+end_src
+and the commands are now
+#+begin_src shell
+  Available Commands:
+    completion  Generate the autocompletion script for the specified shell
+    help        Help about any command
+    walk-dogs   A brief description of your command
+#+end_src
+
+*** Add a Command Specific Flag
+Viper supports "global" flags, called persistent flags, that will apply to all commands (subcommands, to be precise), and command specific flags, that can only be used with that specific command. Let's add a ~name~ flag. Go to the ~init()~ function and replace the instructive comments so the code looks like
+#+begin_src go
+  func init() {
+          rootCmd.AddCommand(walkDogsCmd)
+
+          // Here you will define your flags and configuration settings.
+
+          walkDogsCmd.Flags().String("name", "Bella", "Which dog gets this walk")
+          viper.BindPFlag("name", walkDogsCmd.Flags().Lookup("name"))
+  }
+#+end_src
+
+The ~walkDogsCmd.Flags()~ line defines a command line flag, default value, and help text. ~viper.BindPFlag~ connects that flag to Viper's configuration map. Much more on that later.
+
+If we ~go run main.go walk-dogs --help~ we see
+#+begin_src shell
+  Flags:
+    -h, --help          help for walk-dogs
+        --name string   Which dog gets this walk (default "Bella")
+#+end_src
+
+Back in ~walkDogs.go~ add a line to the ~Run:~ function,
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("walkDogs called")
+                  fmt.Println("walking", viper.GetString("name"))
+          },
+#+end_src
+Here, we're retrieving that config value from Viper. Try ~go run main.go walk-dogs~
+#+begin_src shell
+  walkDogs called
+  walking Bella
+#+end_src
+then ~go run main.go walk-dogs --name Max~
+#+begin_src shell
+  walkDogs called
+  walking Max
+#+end_src
+
+With the simple case covered, we can move on to what Cobra & Viper really bring to the table.
+
+** Environment Variables
+Environment variables are a widely popular choice, both for local developer and infrastructure configurations. The [[https://12factor.net/][Twelve Factor App]] helped popularized this use case.
+
+Because we chose to include Viper in our ~cobra-cli~ init, the generator dropped the following function into ~cmd/root.go~
+#+begin_src go
+  // initConfig reads in config file and ENV variables if set.
+  func initConfig() {
+          // cfgFile code snipped...
+          viper.AutomaticEnv() // read in environment variables that match
+#+end_src
+We'll get the the omitted config file code [[*Structured Configs: Using a Config File][later]]. It's the ~AutomaticEnv()~ we're interested in now. That binds Viper keys to environment variables, uppercased, of course. Therefore, in a ~bash~ shell we can type
+#+begin_src shell
+  NAME=Luna go run main.go walk-dogs
+#+end_src
+and get
+#+begin_src shell
+  walkDogs called
+  walking Luna
+#+end_src
+
+Viper has more detailed control of environment variable binding, see [[https://github.com/spf13/viper#working-with-environment-variables][Working with Environment Variables]]. But ~AutomaticEnv()~ gets it done and, with a small customization handles more complex configurations, as well see next.
+
+** Configs for Multiple Commands
+Let's add a new ~feed-cats~ command.
+#+begin_src shell
+  cobra-cli --config .cobra.yaml add feedCats
+#+end_src
+and in ~cmd/feedCats.go~ change the ~Use:~ line
+#+begin_src go
+          Use:   "feed-cats",
+#+end_src
+
+In this case we want to feed lots of cats. Rewrite the ~init()~ function in ~cmd/feedCats.go~ to
+#+begin_src go
+  func init() {
+          rootCmd.AddCommand(feedCatsCmd)
+
+          // Here you will define your flags and configuration settings.
+
+          feedCatsCmd.Flags().StringArray("names", []string{}, "Which cats to feed")
+          viper.BindPFlag("cats.names", feedCatsCmd.Flags().Lookup("names"))
+  }
+#+end_src
+The ~StringArray~ flag supports a slice of strings and to feed all those cats. Note the ~"cats.names"~ key for this flag. That introduces structure that we'll utilize below.
+
+Update the ~Run: func~ to
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("feedCats called")
+                  fmt.Println("feeding", viper.GetStringSlice("cats.names"))
+          },
+#+end_src
+and lets feed some cats.
+#+begin_src shell
+  go run main.go feed-cats --names Loki --names Callie
+#+end_src
+outputs
+#+begin_src shell
+feedCats called
+feeding [Loki Callie]
+#+end_src
+
+*** Structure in Environment Variables
+If you try
+#+begin_src shell
+  NAMES=Binx go run main.go feed-cats
+#+end_src
+Binx doesn't get fed
+#+begin_src shell
+  feedCats called
+  feeding []
+#+end_src
+
+We could try ~CATS.NAMES=Binx~, but that's not a valid environment variable name:
+#+begin_src shell
+  CATS.NAMES=Binx: command not found
+#+end_src
+
+Viper provides a rewrite rule to map structured keys to valid environment variables. Go back to ~initConfig()~ in ~cmd/root.go~ and above ~viper.AutomaticEnv()~ edit as follows
+#+begin_src go
+          replacer := strings.NewReplacer(".", "_")
+          viper.SetEnvKeyReplacer(replacer)
+          viper.AutomaticEnv() // read in environment variables that match
+#+end_src
+The ~NewReplacer~ + ~SetEnvKeyReplacer()~  does what you expect, replaces the ~.~ with ~_~. So now
+#+begin_src shell
+  CATS_NAMES=Binx,Mage go run main.go feed-cats
+#+end_src
+gives
+#+begin_src shell
+  feedCats called
+  feeding [Binx,Mage]
+#+end_src
+Great. Or not. Let's investigate with an indispensable tool for working with Viper.
+
+Create a new ~cmd/configTools.go~ file with
+#+begin_src go
+  package cmd
+
+  import (
+          "log"
+
+          "github.com/spf13/viper"
+          "gopkg.in/yaml.v2"
+  )
+
+  func yamlStringSettings() string {
+          c := viper.AllSettings()
+          bs, err := yaml.Marshal(c)
+          if err != nil {
+                  log.Fatalf("unable to marshal config to YAML: %v", err)
+          }
+          return string(bs)
+  }
+
+#+end_src
+(Full D: comes straight off the [[https://github.com/spf13/viper#marshalling-to-string][Marshalling to string]] [sic] section in the Viper docs.)
+
+Now, add another line to the ~Run: func~, so we have
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("feedCats called")
+                  fmt.Println("feeding", viper.GetStringSlice("cats.names"))
+                  fmt.Printf(yamlStringSettings())
+          },
+#+end_src
+
+Now
+#+begin_src shell
+  CATS_NAMES=Binx,Mage go run main.go feed-cats
+#+end_src
+outputs
+#+begin_src shell
+  feedCats called
+  feeding [Binx,Mage]
+  cats:
+    names: Binx,Mage
+  name: Bella
+#+end_src
+
+Compare that to the output of
+#+begin_src shell
+  go run main.go feed-cats --names Binx --names Mage
+#+end_src
+namely
+#+begin_src shell
+  feedCats called
+  feeding [Binx Mage]
+  cats:
+    names:
+    - Binx
+    - Mage
+  name: Bella
+#+end_src
+See the problem? Our env var input is for one cat named ~"Binx,Mage"~, not two cats. (And that's a awful name for a cat, too.) Viper doesn't assume any format beyond "plain string" for environment values. Nor should it, there's no standard and no reason for Viper to have an opinion.
+
+But lets say we want to support simple, comma delimited text. We'll have to do that ourselves. Update ~Run: func~ to
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("feedCats called")
+                  viper.Set("cats.names", strings.Split(viper.GetString("cats.names"), ","))
+                  fmt.Println("feeding", viper.GetStringSlice("cats.names"))
+                  fmt.Printf(yamlStringSettings())
+          },
+#+end_src
+and on
+#+begin_src shell
+  CATS_NAMES=Binx,Mage go run main.go feed-cats
+#+end_src
+you should see those cats feed correctly
+#+begin_src shell
+  feedCats called
+  feeding [Binx Mage]
+  cats:
+    names:
+    - Binx
+    - Mage
+  name: Bella
+#+end_src
+
+Since the parsing of env var values is on us, we can adopt whatever formatting convention we choose. JSON? Sure
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("feedCats called")
+                  jsonValues := viper.GetString("cats.names")
+                  var values []string
+                  if err := json.Unmarshal([]byte(jsonValues), &values); err != nil {
+                          fmt.Println(err, "->", jsonValues)
+                          os.Exit(1)
+                  }
+                  viper.Set("cats.names", values)
+                  fmt.Println("feeding", viper.GetStringSlice("cats.names"))
+                  fmt.Printf(yamlStringSettings())
+          },
+#+end_src
+and
+#+begin_src shell
+  CATS_NAMES='["Binx","Mage"]' go run main.go feed-cats
+#+end_src
+works.
+
+But Houston, we have a problem.
+#+begin_src shell
+  go run main.go feed-cats --names Binx --names Mage
+#+end_src
+gives
+#+begin_src shell
+  feedCats called
+  unexpected end of JSON input -> 
+  exit status 1
+#+end_src
+
+We hit this error because ~jsonValues~ var is an empty string. Why is that?
+
+Well, when Viper matches a key via environment variable it only knows set the value to a string. Viper has no builtin rule to parse env values. But remember our flag definition
+#+begin_src go
+          feedCatsCmd.Flags().StringArray("names", []string{}, "Which cats to feed")
+          viper.BindPFlag("cats.names", feedCatsCmd.Flags().Lookup("names"))
+#+end_src
+With flags Viper builds a structured ~cats~ key of type ~[]string~.
+
+Viper ~Get*~ functions, when asked to lookup a key of the wrong type, will simply return the default value for the requested type. That is, ~viper.GetString("cats.names")~ returns ~""~ when ~cats.names~ is a ~[]string~ instead of a ~string~. Viper also doesn't provide a direct way to know whether a key is set by default value, flag, or environment. It's possible to write code that introspects that (try Google or ChatGPT), but for now we'll apply a simple fix.
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("feedCats called")
+                  jsonValues := viper.GetString("cats.names")
+                  var values []string
+                  if err := json.Unmarshal([]byte(jsonValues), &values); err == nil {
+                          viper.Set("cats.names", values)
+                          fmt.Println("cat names from env")
+                  }
+                  fmt.Println("feeding", viper.GetStringSlice("cats.names"))
+                  fmt.Printf(yamlStringSettings())
+          },
+#+end_src
+
+*** The Problem with Environment and Flag Configs
+Environment and flag configurations work great as long as the information stays flat, or close to it. As configurations get more complex specifying these configs becomes a problem. We're faced with writing "one line configs", i.e., collapse JSON, YAML, etc. into a single line and dropping that into an env or flag spec. Escaping characters and line breaks for these is no fun and brittle. Easy to read YAML becomes gobbledygook in a single line.
+
+Tl;dr is environment variables are fine for key/value pairs, where values are simple types, but brittle for structured configurations.
+
+** Structured Configs: Using a Config File
+Let's look at Viper's support for finger and eye friendly config files. As mentioned [[*What are Cobra & Viper?][above]] plays nice with most common formats. We'll use YAML here.
+
+Good news: the ~feed-cats~ command is ready to roll for a config file as is.
+
+In the directory, where ~main.go~ lives, create ~.tame-the-viper.yaml~ with
+#+begin_src yaml
+  cats:
+    names:
+      - Simba
+      - Kitty
+#+end_src
+
+Then, with a simple
+#+begin_src shell
+  go run main.go feed-cats --config .tame-the-viper.yaml
+#+end_src
+you should get
+#+begin_src yaml
+  Using config file: .tame-the-viper.yaml
+  feedCats called
+  feeding [Simba Kitty]
+  cats:
+    names:
+    - Simba
+    - Kitty
+  name: Bella
+#+end_src
+Easy.
+
+*** Value Precedence
+Now that we're mixing environment, flag, and config file settings, it's worth reviewing their precedence. Viper uses the following precedence order. Each item takes precedence over the item below it:
+- explicit call to Set
+- flag
+- env
+- config
+- key/value store
+- default
+  (from [[https://github.com/spf13/viper][Why Viper?]])
+
+*** Customize initConfig
+Let's look at the config file setup. The ~cobra-cli~ put it in the ~cmd/root.go~ file.
+#+begin_src go
+  // initConfig reads in config file and ENV variables if set.
+  func initConfig() {
+          if cfgFile != "" {
+                  // Use config file from the flag.
+                  viper.SetConfigFile(cfgFile)
+          } else {
+                  // Find home directory.
+                  home, err := os.UserHomeDir()
+                  cobra.CheckErr(err)
+
+                  // Search config in home directory with name ".tame-the-viper" (without extension).
+                  viper.AddConfigPath(home)
+                  viper.SetConfigType("yaml")
+                  viper.SetConfigName(".tame-the-viper")
+          }
+#+end_src
+The ~cfgFile~ string is a package var that will get set by the ~--config~ flag, via
+#+begin_src go
+          rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tame-the-viper.yaml)")
+#+end_src
+in the ~init()~ function.
+
+Notice that if ~cfgFile~ is unset, the ~else~ branch above will look for ~$HOME/.tame-the-viper.yaml~ as the config. This behavior is from the code the ~cobra-cli~ put down, but we can change it. My preference is, rather than the homedir, default to a config file in the current working direction, typically the path where ~main.go~ is invoked from. (More of a "dotenv" behavior, fwiw.)
+
+Change the ~else~ clause to
+#+begin_src go
+                  // Find cwd directory.
+                  cwd, err := os.Getwd()
+                  cobra.CheckErr(err)
+
+                  // Search config in home directory with name ".tame-the-viper" (without extension).
+                  viper.AddConfigPath(cwd)
+                  viper.SetConfigType("yaml")
+                  viper.SetConfigName(".tame-the-viper")
+#+end_src
+And if you want to change from YAML to TOML, JSON, dotenv, etc., this is the spot. If what you want is a traditional dotenv setup, ~"dotenv"~ in ~viper.SetConfigType~ will get that done.
+
+Also, update the doc string in the flag spec. In the ~init()~ function, update the config flag to
+#+begin_src go
+          rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $PWD/.tame-the-viper.yaml)")
+#+end_src
+
+Just like the "Don't commit .env files" practice, I always add the app's default config to ~.gitignore~ (assuming git)...
+#+begin_src go
+  .tame-the-viper.yaml
+#+end_src
+
+** Complex Configs
+Above, we made the case that much beyond flat key/value settings, environment and flag configs are challenging. Let's tackle a more complex, structured config now that we have a config file to work with.
+
+Use ~cobra-cli~ and add a new command:
+#+begin_src shell
+  cobra-cli --config .cobra.yaml add herdKittens
+#+end_src
+Change the ~Use:~ in ~cmd/herdKittens.go~ to
+#+begin_src go
+          Use:   "herd-kittens",
+#+end_src
+
+For this config we're going to dispense with environment and flag settings, and go straight to a config struct in Go and config file in YAML. We'll circle back on that dispensation later.
+
+We're going to have Viper unmarshal a config from a YAML file into a Go struct. Under the import block of ~cmd/herdKittens.go~ add
+#+begin_src go
+  type KittenConfig struct {
+          Mother string
+          Father string
+          Litter []struct {
+                  KittenName string
+                  FurPattern string
+                  Gender     string
+          }
+  }
+
+  var kittenConfig KittenConfig
+#+end_src
+and below that, at the ~Run: func~, change it to
+#+begin_src go
+          Run: func(cmd *cobra.Command, args []string) {
+                  fmt.Println("herdKittens called")
+                  if err := viper.UnmarshalKey("kittens", &kittenConfig); err != nil {
+                          log.Fatalf("unable to marshal config to YAML: %v", err)
+                  }
+                  fmt.Printf("herding the clowder %+v\n", kittenConfig)
+          },
+#+end_src
+Here ~viper.UnmarshalKey~ will find the top level "kittens" key in the config and write it's contents into ~kittenConfig~.
+
+#+begin_src shell
+  go run main.go herd-kittens
+#+end_src
+outputs
+#+begin_src shell
+  Using config file: /home/rod/Projects/github.com/rmorison/tame-the-viper/.tame-the-viper.yaml
+  herdKittens called
+  herding the clowder {Mother:Cleo Father:Jack Litter:[{KittenName: FurPattern: Gender:Male} {KittenName: FurPattern: Gender:Female} {KittenName: FurPattern: Gender:Female}]}
+#+end_src
+
+There's a problem: ~KittenName~ and ~FurPattern~ are default valued, empty strings. ~UnmarshalKey~ uses the [[https://pkg.go.dev/github.com/mitchellh/mapstructure][mapstructure]] package, so we need to help Viper with the YAML keys. Amend the ~KittenConfig~ type as follows.
+#+begin_src go
+  type KittenConfig struct {
+          Mother string
+          Father string
+          Litter []struct {
+                  KittenName string `mapstructure:"kitten_name"`
+                  FurPattern string `mapstructure:"fur_pattern"`
+                  Gender     string
+          }
+  }
+
+#+end_src
+and the output is now
+#+begin_src shell
+  Using config file: /home/rod/Projects/github.com/rmorison/tame-the-viper/.tame-the-viper.yaml
+  herdKittens called
+  herding the clowder {Mother:Cleo Father:Jack Litter:[{KittenName:Oscar FurPattern:Tabby Gender:Male} {KittenName:Daisy FurPattern:Bicolor Gender:Female} {KittenName:Lola FurPattern:Colorpoint Gender:Female}]}
+#+end_src
+...Spot on!
+
+** Mixing Environment and Flags with Complex Configs
+Yes, you can do it, as we've shown for ~feed-cats~.  There we used Viper's flag notation ~"cats.names"~ to connect to the YAML object structure. But that notation only goes so far. You might think that a flag key like ~"kittens.litter.1.kitten_name"~ would get us the first kitten's name in ~herd-kittens~, but no, Viper doesn't support that.
+
+Another limitation affects mixing ~viper.Unmarshal~ and flags. See [[https://github.com/spf13/viper/issues/368][Binding flags as nested keys does not work #368]] in the Viper issues list. Down that thread [[https://github.com/spf13/viper/issues/368#issuecomment-1127455123][this snippet]] is offered as a workaround. I've used that patch with success.
+
+However, consider if the use case is compelling enough to warrant the added complexity. In my case, it did for a particular project. There I added
+#+begin_src go
+  func UnmarshalConfigKey(key string, out interface{}) error {
+          settings := viper.AllSettings()
+          return mapstructure.Decode(settings[key], out)
+  }
+#+end_src
+to the ~cmd~ package and call that instead of ~viper.Unmarshal~. 
+
+Further travel down that rabbit hole is beyond the scope of this article.
+
+** Wrapping up
+
+*** Subcommands
+One feature we haven't covered is subcommands. Let's say we wanted the following groups of commands:
+- ~go run main.go feed cats~
+- ~go run main.go feed dogs~
+- ~go run main.go herd cats~
+- ~go run main.go herd cattle~
+
+We would run the following commands
+#+begin_src shell
+  cobra-cli add feed
+  cobra-cli add herd
+  cobra-cli add cats create -p 'feedCmd'
+  cobra-cli add dogs create -p 'feedCmd'
+  cobra-cli add cats create -p 'herdCmd'
+  cobra-cli add cattle create -p 'herdCmd'
+#+end_src
+and proceed similarly to the above examples. The rest of this pattern is an exercise for the reader.
+
+*** Final thoughts
+Viper provides a reasonable solution CLI applications that just need traditional key/value "dotenv" support, on par with other packages. For complex configurations that push the limits of that simple model Viper brings much more to the table and can replace many lines of config crunching code.
+
+It's fair to say Viper has wrinkles and subtleties that don't jump out of the package docs. Hopefully this article helps.
+
+[[./img/portrait_of_woman_with_two_snakes_wrapped_around_her-scopio-b73eeac1-31fc-4229-9745-b2369af022fb.jpg]]
+
+* NEXT The Joy of a Dedicated Server
+
+** IPMI, power, console access
+
+** DNS
+
+** SSH and standard installs
+
+*** Local
+#+begin_src shell
+  ssh-copy-id -i ~/.ssh/id_ecdsa root@n.morison.io
+  ssh root@n.morison.io
+#+end_src
+
+*** Server
+#+begin_src shell
+  adduser --disabled-password rod
+  cp -a .ssh /home/rod
+  chown -R rod:rod ~rod/.ssh
+  echo 'rod ALL=(ALL) NOPASSWD:ALL' >/etc/sudoers.d/dog && chmod 440 /etc/sudoers.d/dog
+  exit
+#+end_src
+
+*** Verify access and nopw sudo
+#+begin_src shell
+  ssh rod@n.morison.io
+  sudo cat /etc/sudoers
+  sudo tail /var/log/auth.log
+#+end_src
+and look for
+#+begin_src shell
+Mar 29 00:07:39 s1254133 sshd[12673]: pam_unix(sshd:session): session opened for user rod(uid=1000) by (uid=0)
+Mar 29 00:07:39 s1254133 systemd-logind[847]: New session 22 of user rod.
+Mar 29 00:07:39 s1254133 systemd: pam_unix(systemd-user:session): session opened for user rod(uid=1000) by (uid=0)
+Mar 29 00:07:44 s1254133 sudo:      rod : TTY=pts/1 ; PWD=/home/rod ; USER=root ; COMMAND=/usr/bin/cat /etc/sudoers
+#+end_src
+
+*** Change hostname
+#+begin_src shell
+  sudo hostname n.morison.io
+  sudo vi /etc/hostname /etc/hosts
+#+end_src
+Replace the hostname in ~/etc/hostname~ and append the list in ~/etc/hosts~.
+
+*** Create an ssh key for the non-root user
+#+begin_src shell
+  ssh-keygen -t ecdsa
+#+end_src
+Passphrase optional.
+
+*** Install ufw
+#+begin_src shell
+  sudo ufw allow OpenSSH
+  sudo ufw enable
+#+end_src
+
+*** Update, Upgrade, Standard Installs
+#+begin_src shell
+  sudo apt update && sudo apt upgrade --yes
+  sudo apt install emacs-nox --yes
+#+end_src
+
+*** Docker
+1. Per [[https://docs.docker.com/engine/install/ubuntu/][Docker on Ubuntu instructions]]. I use the [[https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository][apt repository]] installation, but the [[https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script][convenience script]] is a recommended alternative.
+2. I run Docker as non-root. If you don't want to ~sudo~ all your Docker commands, follow the [[https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user][Manage Docker as a non-root user]] guide
+
+** Modoboa
+https://upcloud.com/resources/tutorials/install-secure-private-email-server-modoboa
+
+
+* NEXT SAM HTTP Stack
 
 * TODO Running TechDocs locally
 When writing docs it's often desirable to see them rendered before published. The Backstage project provides a [[https://github.com/backstage/techdocs-container][techdocs-container]] that can build and serve locally, but it does not include Mermaid support. We'll run [[https://backstage.io/docs/features/techdocs/cli][techdocs-cli]] locally, outside Docker. You'll need to install [[https://www.mkdocs.org/][Mkdocs]], a Python app, with TechDocs and Mermaid support.
