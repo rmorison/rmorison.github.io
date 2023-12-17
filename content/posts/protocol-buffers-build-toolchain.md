@@ -7,6 +7,10 @@ topics = ["Protocol Buffers", "Protobuf", "gRPC", "Makefile"]
 description = "Master Protocol Buffers with Ease: A Step-by-Step Guide to Building a Robust Protobuf Toolchain"
 +++
 
+## Tl;dr {#tl-dr}
+
+Go to the [protobuf-toolchain-template](https://github.com/rmorison/protobuf-toolchain-template) repo and figure out the rest.
+
 {{< figure src="/ox-hugo/scopio-48ea3889-59b4-4eb8-939b-278f2faf947f.jpg" >}}
 
 

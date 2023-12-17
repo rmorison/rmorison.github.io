@@ -1522,6 +1522,9 @@ CLOSED: [2023-12-17 Sun 12:49]
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Master Protocol Buffers with Ease: A Step-by-Step Guide to Building a Robust Protobuf Toolchain"
 :END:
 
+** Tl;dr
+Go to the [[https://github.com/rmorison/protobuf-toolchain-template][protobuf-toolchain-template]] repo and figure out the rest.
+
 [[./img/scopio-48ea3889-59b4-4eb8-939b-278f2faf947f.jpg]]
 
 ** Introduction
