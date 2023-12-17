@@ -1514,6 +1514,277 @@ I like my default Conda environment to be ready to go at a moment's notice. I ad
 #+end_src
 to my ~.bashrc~. Jupyter is always just a terminal away.
 
+* DONE A Protocol Buffers Build Toolchain
+CLOSED: [2023-12-17 Sun 12:49]
+:PROPERTIES:
+:EXPORT_FILE_NAME: protocol-buffers-build-toolchain
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '("Protocol Buffers" "Protobuf" "gRPC" "Makefile")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "Master Protocol Buffers with Ease: A Step-by-Step Guide to Building a Robust Protobuf Toolchain"
+:END:
+
+[[./img/scopio-48ea3889-59b4-4eb8-939b-278f2faf947f.jpg]]
+
+** Introduction
+
+[[https://protobuf.dev/][Protocol Buffers]], or Protobuf, developed by Google, is widely used for serializing structured data, offering a more efficient alternative to formats like XML or JSON. However, getting started with Protobuf is a "batteries not included" proposition. The best place to start is the [[https://protobuf.dev/getting-started/gotutorial/][Protocol Buffer Basics: Go]] doc which provides plenty of background on using Protobuf, but is hardly a step by step introduction.
+
+The [[https://protobuf.dev/getting-started/gotutorial/#compiling-protocol-buffers][hands on]] section of that doc simply states
+#+begin_quote
+If you haven’t installed the compiler, download the package and follow the instructions in the README.
+#+end_quote
+
+The link in that step sends you to the [[https://github.com/protocolbuffers/protobuf/releases/][protobuf repo releases page]] where you're faced with a list of zip and tar files to guess^H^H^H^H^Hchoose from. Nowhere is the issue of build system or toolchain discussed head on. The simplistic "install it somewhere and here's the command" approach is not adequate for a production Protobuf based service. 
+
+In particular, since the Protocol Buffers compiler and plugins are outside whatever package managing you're using (pip, poetry, npm, yarn, ...), how do we lock that part of the build, too?
+
+That, then, is the point of this article. We'll walk through a simple Makefile based Protobuf build that versions the ~protoc~ compiler and any plugins or Protobuf extensions in use.
+
+The reference repository and the app in it include a working client/server example based on [[https://grpc.io/][gRPC]]. Though gRPC is a common pairing for Protobuf, keep in mind Protobuf is a serialization format, not a protocol, web stack, or network server by itself. Protobuf is utilized by other (non-gRPC) system such as [[https://github.com/twitchtv/twirp][twirp]], [[https://www.envoyproxy.io/][envoy]], etc., and can also be used by itself, much like the json library in your favorite language SDK.
+
+** What's a Toolchain?
+ChatGPT (after some redirect prompting) says:
+
+#+begin_quote
+A "toolchain" in software development is a suite of tools used in a coordinated manner to build and maintain applications, especially those involving complex processes or specialized components. When developing an application that employs Protocol Buffers, the toolchain is central to the workflow. It typically encompasses the protocol compiler, its various plugins, the supporting libraries, and the build scripts—like Makefiles—that orchestrate the setup and execution of these tools. This integrated set of tools is essential for transforming high-level design into a functional software product, ensuring consistency, efficiency, and reliability throughout the development process.
+#+end_quote
+
+** Just Do It
+Before diving into the build code itself, let's "just build it", and give it a quick "go". The client-server application is the [[https://github.com/grpc/grpc-go/tree/master/examples/helloworld][gRPC Hello World]] from the [[https://github.com/grpc/grpc-go][grpc-go]] repo.
+
+The commands below assume a recent Go install, either with a version manager like [[https://github.com/stefanmaric/g][g]], from [[https://go.dev/doc/install][go.dev]], [[https://brew.sh/][Homebrew]], etc.
+
+*OSX Note*: change ~make~ to ~make PROTOC_ARCH=osx-aarch~ or ~make PROTOC_ARCH=osx-x86_64~, depending on your platform.
+ 
+#+begin_src shell
+  git clone git@github.com:rmorison/protobuf-toolchain-template.git
+  make
+  ./greeter_server/main &
+  ./greeter_client/main
+  ./greeter_client/main --name everybody
+#+end_src
+
+** Build System Walkthrough
+...And what you can expect to change when you use this template for your project.
+
+*** Toolchain Build
+Usually the ~toolchain~ build is done once at project startup,
+committed with artifacts not excluded in ~toolchain/.gitignore~ and
+touched lightly after that, e.g., when adding a plugin or updated
+plugins or the protocol compiler itself.
+
+**** [[https://github.com/rmorison/protobuf-toolchain-template/blob/main/toolchain/Makefile][toolchain/Makefile]]
+- Go modules path for the toolchain package. Note that ~GO_PACKAGE~ is typically set by an invoking Makefile.
+#+begin_src make
+  GO_TOOLCHAIN_PACKAGE := $(GO_PACKAGE)/toolchain
+#+end_src
+
+- Protocol compiler version. See the [[https://github.com/protocolbuffers/protobuf/releases][Protobuf release page]] for
+  available versions and architectures.
+#+begin_src make
+  PROTOC_VERSION := 25.1
+#+end_src
+
+- Protocol compiler architecture, defaulting to Linux on x86_64. The
+  top level ~Makefile~ will set this when invoked. (Todo: script
+  auto-detect for ~PROTOC_ARCH~.)
+#+begin_src make
+  PROTOC_ARCH := $(if $(PROTOC_ARCH),$(PROTOC_ARCH),linux-x86_64)
+#+end_src
+
+- Protocol compiler plugin builds. Fyi, ~protoc~ plugins transform the
+  Protobuf file into artifacts, usually, but not always, code
+  files. [[https://github.com/pseudomuto/protoc-gen-doc][protoc-gen-doc]] is a widely used example of a documentation
+  producing ~protoc~ plugin.
+#+begin_src make
+bin/protoc-gen-go: go.sum | bin
+	export GOBIN=$$(pwd)/bin && go install google.golang.org/protobuf/cmd/protoc-gen-go
+#+end_src
+
+**** [[https://github.com/rmorison/protobuf-toolchain-template/blob/main/toolchain/tools.go][toolchain/tools.go]]
+- Go module plugins for ~protoc~. Each line should have an entry in
+  the ~toolchain/Makefile~ as cited above. Note that the build process
+  will create a ~go.sum~ that will "lock" the toolchain versions of these.
+#+begin_src go
+  import (
+          _ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+          _ "google.golang.org/protobuf/cmd/protoc-gen-go"
+  )
+#+end_src
+
+*** Application Build
+
+**** [[https://github.com/rmorison/protobuf-toolchain-template/blob/main/Makefile][Makefile]]
+- Set ~GO_PACKAGE~ to your project Go Modules path. This Makefile with
+  run the ~go mod init~ with it.
+#+begin_src make
+  GO_PACKAGE := github.com/rmorison/protobuf-toolchain-template
+#+end_src
+
+- The source ~.proto~ files to compile.
+#+begin_src make
+  PROTO_FILES := proto/helloworld/helloworld.proto
+#+end_src
+
+- Protocol compiler architecture, defaulting to Linux on
+  x86_64. Change to ~osx-aarch_64~ or ~osx-x86_64~ for OSX.
+#+begin_src make
+  PROTOC_ARCH := $(if $(PROTOC_ARCH),$(PROTOC_ARCH),linux-x86_64)
+#+end_src
+
+- The application build. Many apps will have a single "main" target, though this example has two. You will need to change the ~all~ target and its dependencies. You may need or want to update the wildcard build rule for ~%/main~, e.g., move it to top level of the project, add more specific ~go build~ options, or replace this section entirely. Note that for most projects "main" can depend on all of the ~protoc~ build artifacts. As project complexity and maturity grows, expect this section to be revised.
+#+begin_src make
+# Build go program from main.go
+%/main: %/main.go go.mod $(PROTOC_GO_FILES)
+	go mod tidy
+	go build -o $@ $<
+
+all: greeter_client/main greeter_server/main
+
+greeter_client/main: greeter_client/main.go
+greeter_server/main: greeter_server/main.go
+#+end_src
+
+- Typically you should commit all build artifacts not excluded in the top level and toolchain ~.gitignore~ files. Specifically, the ~go.mod~, ~go.sum~ and source files in each proto directory should be committed. The former "lock" the build and the latter provider importable Protobuf client stubs.
+
+**** Protobuf Source Files
+- Create your project ~.proto~ files in ~proto/{name}/{name}.proto~ and update the ~Makefile~. Be sure your ~option go_package~ is set correctly and corresponds to ~GO_PACKAGE~ and your proto module name. E.g., for the helloworld example:
+#+begin_src go
+  option go_package = "github.com/rmorison/protobuf-toolchain-template/proto/helloworld";
+#+end_src
+
+*** PS
+Questions or comments to repo [[https://github.com/rmorison/protobuf-toolchain-template/discussions][Discussions]]. Bugs, feature requests to [[https://github.com/rmorison/protobuf-toolchain-template/issues][Issues]].
+ 
+
+* TODO Artificial Intelligence: Let's not get /that/ excited
+
+** ChatGPT can actually say something...helpful
+Apparently, based on the millions of users (myself included), ChatGPT can produce sometimes very helpful answers to very human elicited questions. 
+
+** But what are we comparing it to, really?
+
+*** Ok, let's go full anthropomorphic on GPT
+
+** Does it have eyes? Ears? Smell, taste, touch? Can it move?
+
+** Does it dream? Do ideas pop into its head? Is there a "system 1" there?
+
+** Does it...create?
+
+*** Can it plan?
+
+*** What is it's sense of time?
+
+** How much did it eat as a kid? Can actual kids do better?
+
+** What about my job?
+Honestly, I sometimes forget I'm paying for ChatGPT 4. It's helpful, but not that helpful. Only when I hit a wall do I flip into GPT mode and ask something that I don't get an incisive search hit for.
+
+*** Back to the future: https://www.imdb.com/title/tt0708481/
+
+* TODO Practical Test Oriented Development
+Call it "TOD". 
+** Unit Test Practice
+- **Test as you code** - More practical than formal test driven design
+  (TDD): when you write a feature, write a test for that
+  feature. Sometimes you'll code the feature first. Others you might
+  be inspired to write the test first (TDD). For many features that
+  are "bigger than a bread box" you'll need to start some code to know
+  how to structure the tests. Code some, test some. And when you've
+  put the wrap on a snippet and have a test for it, run the tests.
+
+- **How's your coverage?** - Is your test hitting the code you wrote?
+  Run with test coverage, html output and check. Not every time, but
+  before you commit.
+
+- **How deep is your test?** - Just executing code is a good measure
+  that you don't have a catastrophic failure. (Such failures are less
+  likely in compiled code, but easy to do in an interpreted language
+  like Python.) Test coverage only tells you that your code doesn't
+  crash outright. Coverage doesn't tell you if your code is producing
+  correct results, will crash on unexpected inputs, etc.
+
+  ```python
+		wing_planner = container.wing_planner(index=index)
+        assert isinstance(wing_planner, WingPlanner)
+        assert isinstance(wing_planner.profile, Profile)
+  ```
+  which satisifies code coverage. Then we test 1 or 2 attributes of each marshalled sub-component, like
+
+  ```python
+        # Personal
+        assert gp.personal.first_name == user_extra.get("first_name")
+        assert gp.personal.date_of_birth == date_or_none(
+            user_extra.get("date_of_birth")
+        )
+  ```
+
+  to smoke test code logic. Every. Single. Parameter. ...would be a
+  waste of time. Which ones? Some attributes are more complex to
+  derive or more important to get right. Those ones.
+
+  That said, if you're fixing a bug for a specific input / output,
+  test for that specific input / output.
+
+- **Use multivariate test inputs** - "A multivariate test is a test
+  that simultaneously tests several combinations of several
+  variables." (Ref:
+  [ABTasty](https://www.abtasty.com/multivariate-testing/#:~:text=A%20multivariate%20test%20is%20a,on%20the%20indicators%20being%20tracked.),
+  a rando test shop). This practice is more valuable than testing
+  every output. Throw 1 or 2 normal inputs at a test. Then consider
+  more plausible edge cases (contradiction, I know) and work those
+  in. More edge cases will come in from bugs. Fold those into the test
+  fixtures.
+
+- **Use database data, but don't use a database** - You can cobble
+  together test input data with in code fixtures or hand written
+  files. But once input data gets "gnarly" (technical term) we're
+  better off using database data.
+
+  We want to run these tests as we code. Hitting a database, even a
+  local one, dissuades that usage. But almost every database out there
+  can dump into JSON. Since most unit tests are isolated to a table, a
+  convenient practice is to pull a few representative records into a
+  json file for that table. With Postgres, for example, that looks
+  like
+
+  ```SQL
+  COPY (
+	  SELECT json_agg(row_to_json(mytable))::text
+	  FROM mytable
+	  WHERE mytable.id IN (1,2,3)
+  ) TO STDOUT; \g 'test_data.json'
+  ```
+
+  (The above semantics works around a "must be superuser or a member
+  of the `pg_write_server_files` role" error you'll hit with `TO
+  'test_data.json`, unless you're a DB superuser.)
+
+  **Warning**: Do not pull test data from a production database!. Pull
+  from a beta or other pre-prod database with test or otherwise PII
+  sanitized data.
+
+- **Use a [repository
+  pattern](https://www.cosmicpython.com/book/chapter_02_repository.html)** -
+  for consuming data, to facilitate test data at test time and
+  production data at production to with minimal code
+  variance. Dependency injection puts a nice ribbon on the repository
+  pattern. We use the Python [Dependency
+  Injector](https://python-dependency-injector.ets-labs.org/index.html)
+  in this application.
+
+
+* TODO Money in Pandas
+#+begin_src python
+scale = 10**7
+balance = 1.1 * scale
+
+for i in range(11*scale):
+    balance -= 0.10
+
+print(balance)
+#+end_src
+
 * TODO Pyenv Install
 #+begin_src shell
 curl https://pyenv.run | bash

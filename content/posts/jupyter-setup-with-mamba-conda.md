@@ -127,7 +127,7 @@ It's `(base)` that we're looking for, the rest depends on your current shell pro
 
 ### What's a Conda Environment? {#what-s-a-conda-environment}
 
-Python, similar to many other languages, has evolved over the decades of its use. The needs of Python developers and the products they create drove an evolution in how the language is installed and run. In days of yore programmers developed a variety of ad-hoc ways to keep the Python setup for different projects from colliding. Let's say project A only worked with Python V2 and project B required Python V3. Then project C used V3, but needed a different version of, say, the Django package.
+Python, similar to many other languages, has evolved over the decades of its use. The needs of Python developers and the products they create drove an evolution in how the language was installed and run. In days of yore programmers developed a variety of ad-hoc ways to keep the Python setup for different projects from colliding. Let's say project A only worked with Python V2 and project B required Python V3. Then project C used V3, but needed a different version of, say, the Django package.
 
 The [venv](https://docs.python.org/3/library/venv.html) package is now a standard part of Python to solve this problem. Long story short, it only goes part way. Many "Pure Python" libraries are in wide use, that will work on any OS. But some libraries require "binary support", meaning compiled OS specific code. The `venv` package doesn't fully solve this problem.
 
@@ -170,9 +170,9 @@ and `mamba list` tells us there's nothing much there...
 # Name                    Version                   Build  Channel
 ```
 
-not even a Python program, as we saw in the base environment. Isolated environments, ftw.
+not even a Python program, as we saw in the base environment. Isolated environments, indeed.
 
-Let's install the latest Python, Jupyter, and Pandas, three essential for most data work.
+Let's install the latest Python, Jupyter, and Pandas, three essentials for most data work.
 
 ```shell
 mamba install python jupyterlab pandas
