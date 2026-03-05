@@ -10,13 +10,13 @@ description = "What Georg Solti's path to conducting the greatest recording ever
 
 <img src="/ox-hugo/scopio-78aeb200-e07e-48c0-a5a5-783b350b63ef.jpg" style="float:right; margin:0 0 1em 1em; max-width:400px;" alt="Sheet music with tuning fork">
 
-Georg Solti wanted to conduct. He trained at the Franz Liszt Academy in Budapest under Bartók, Kodály, and Dohnányi — some of the greatest musical minds of the 20th century — but his eye was always on the podium.
+[Georg Solti](https://en.wikipedia.org/wiki/Georg_Solti) wanted to conduct. He trained at the Franz Liszt Academy in Budapest under Bartók, Kodály, and Dohnányi — some of the greatest musical minds of the 20th century — but his eye was always on the podium.
 
 Then life intervened. The Nazis rose. Solti, Jewish, fled Hungary in 1938. He landed in Switzerland, where wartime rules prohibited him from conducting. So he played piano. Concert after concert, year after year, not the role he wanted — but he kept going deeper into the music from every angle he could reach.
 
 After the war, he worked his way up through opera houses in Frankfurt and London. Not famous. Not consecrated by the classical establishment. But building.
 
-In 1958, a Decca producer named John Culshaw needed to do something nobody had done: record Wagner's complete Ring Cycle — four operas, fifteen hours — not as a live capture, but as a studio production that used stereo the way a director uses a camera. The era's great Wagner conductors were unavailable. Furtwängler had died. Karajan was signed to a rival label. Culshaw needed someone who could conduct one of the most demanding works in the classical canon _and_ think fluently in a medium that barely existed yet.
+In 1958, a Decca producer named [John Culshaw](https://en.wikipedia.org/wiki/John_Culshaw) needed to do something nobody had done: record Wagner's complete Ring Cycle — four operas, fifteen hours — not as a live capture, but as a studio production that used stereo the way a director uses a camera. The era's great Wagner conductors were unavailable. Furtwängler had died. Karajan was signed to a rival label. Culshaw needed someone who could conduct one of the most demanding works in the classical canon _and_ think fluently in a medium that barely existed yet.
 
 He picked Solti. Trained from the instrument up, from the rehearsal room out, from the individual voice to the full orchestra. Not the most celebrated name. The one who'd been building in every direction.
 
