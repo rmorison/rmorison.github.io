@@ -1,5 +1,5 @@
-#+hugo_base_dir: ../
 #+seq_todo: TODO NEXT IN-PROGRESS DONE
+#+hugo_base_dir: ../
 #+STARTUP: overview
 
 * DONE How I Org, A Software Engineer's Process                        :productivity:personal_process:
@@ -2160,3 +2160,62 @@ So you're holding both of these perspectives simultaneously: AI as a genuine car
 
 Thank you again for your time and thoughtfulness today. Your perspective helps us see both how AI is impacting your life today—from debugging code to managing your house rebuild to enabling projects you never had time for—and your vision for how it should fit into your future: freeing you for meaningful pursuits while preserving the foundations of truth and freedom that make those pursuits worthwhile. The team at Anthropic is excited to discover what patterns emerge from all these conversations. We will analyze the insights from this study as part of our societal impacts research, publish our findings, and use this to build Claude in a way that reflects what we've learned.
 #+end_quote
+* TODO To My Representatives
+I write in script, not because I have to or need to, but because I can. I write because it reflects the wisdom of my years, the things I've seen and learned, and my reflections on what I see now. I was part of the original Internet build. I founded dotcoms in the boom at the turn of the century. I'm still helping build small businesses that have impact on those of us who live "down here".
+
+First and foremost I write to encourage utmost resitance against bullies and those that would use brute force against thoughtful, humanitarians. I had enough of that on the secondary school playground. Then, there were those that would use their bellicose ways to make the rules, choose the teams, and make sure only they could win. Talent, skill, smarts, those did not matter. Only muscles, force, and threats decided who won. I decided to go around those schoolyard bullies and play different games. My life is better for it.
+
+There comes a time when bullies are unavoidable. You cannot go around them. You can't wait them out. Instead, you have to go through them, not on their terms, but on your own. Outsmart them. Out manuever them. Make sure you're one step ahead of them. We are at that time.
+* TODO
+#+begin_quote
+The first are the dabblers: latecomers finally spending some quality time with their chief technology officers. The second rushed to declare themselves AI leaders out of vanity or a desire to have their traditional businesses taken more seriously by tech snobs. “They’re like, Look at me! I’m important! I’m central here. But they’re not actually doing anything yet,” Hoffman said. “They’re just like, Put me at the AI table too.” The third group is different: executives who are quietly making transformational plans. “These are the ones who see it coming. And to their credit, I think a lot of them want to figure out how to help their whole workforce transition with this through education, reskilling, or training.”
+#+end_quote
+To which I'll add a fourth, the sink or swim group. These are the ones left after RIFs and downsizing and told, "cover all the bases, don't care how."
+* DONE Study the Full Score (An AI Allegory)                            :career:ai:leadership:
+CLOSED: [2026-03-04 Wed]
+:PROPERTIES:
+:EXPORT_FILE_NAME: study-the-full-score
+:EXPORT_DATE: 2026-03-04
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :topics '("AI" "Career" "Leadership" "Engineering" "Music")
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :description "What Georg Solti's path to conducting the greatest recording ever made teaches early-career engineers about building across technical depth, leadership, and architectural thinking in the AI era"
+:END:
+
+#+begin_export html
+<img src="/ox-hugo/scopio-78aeb200-e07e-48c0-a5a5-783b350b63ef.jpg" style="float:right; margin:0 0 1em 1em; max-width:400px;" alt="Sheet music with tuning fork">
+#+end_export
+
+Georg Solti wanted to conduct. He trained at the Franz Liszt Academy in Budapest under Bartók, Kodály, and Dohnányi — some of the greatest musical minds of the 20th century — but his eye was always on the podium.
+
+Then life intervened. The Nazis rose. Solti, Jewish, fled Hungary in 1938. He landed in Switzerland, where wartime rules prohibited him from conducting. So he played piano. Concert after concert, year after year, not the role he wanted — but he kept going deeper into the music from every angle he could reach.
+
+After the war, he worked his way up through opera houses in Frankfurt and London. Not famous. Not consecrated by the classical establishment. But building.
+
+In 1958, a Decca producer named John Culshaw needed to do something nobody had done: record Wagner's complete Ring Cycle — four operas, fifteen hours — not as a live capture, but as a studio production that used stereo the way a director uses a camera. The era's great Wagner conductors were unavailable. Furtwängler had died. Karajan was signed to a rival label. Culshaw needed someone who could conduct one of the most demanding works in the classical canon /and/ think fluently in a medium that barely existed yet.
+
+He picked Solti. Trained from the instrument up, from the rehearsal room out, from the individual voice to the full orchestra. Not the most celebrated name. The one who'd been building in every direction.
+
+It's been voted the greatest recording ever made. Twice.
+
+-----
+
+The engineers being shaped right now are going to build the systems that matter most over the next twenty years. But the ones who get the biggest opportunities won't just be the most technically gifted. They'll be the ones already moving along more than one path.
+
+Technical careers run on three tracks. Deep subject matter expertise — the kind where you own the hard problems. Technical leadership — coordinating work, making calls, helping a team move faster. Architectural thinking — understanding how systems connect, how decisions compound, how what you build today becomes someone else's constraint tomorrow. In the before times you could build a career on any one of these.
+
+The rules are changed. Pursue all of them, with intent. Your job or curriculum will cover one, maybe two. Fill the gaps yourself. (An open source project is a rehearsal room you can walk into today.)
+
+The AI era is your stereo recording — a genuinely new medium, not just a faster version of the old one. Most of the senior engineers you'll work alongside built their careers before it existed. Some will adapt. Others won't.
+
+Go deep in your strongest axis first. Build credibility there. But spend real time in the other two — take the project that stretches you toward leadership, think about the architecture even when nobody asked, understand the full system, not just your corner of it.
+
+Building across all three tracks is harder than specializing. It's supposed to be. The difficulty is what makes the people who do it rare — and rare is what gets you the call when the moment comes.
+
+Culshaw didn't need the most famous conductor. He needed the one who'd kept going deeper. Solti was 46 when that call came. He conducted for forty more years.
+
+Don't wait to study the full score.
+
+-----
+
+#+begin_export html
+<p style="font-size:0.85em; color:#666; margin-top:2em;">Original content written with the editorial assistance of <a href="https://writewithspiral.com/" target="_blank" rel="noopener">Spiral</a>.</p>
+#+end_export
