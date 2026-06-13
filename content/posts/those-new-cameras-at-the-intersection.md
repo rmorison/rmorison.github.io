@@ -12,6 +12,9 @@ description = "New license-plate readers are going up around Pasadena and Altade
      Do not create an org entry with EXPORT_FILE_NAME "those-new-cameras-at-the-intersection"
      or ox-hugo will overwrite this file. -->
 
+<!-- IMAGE SLOT 1 (Scopio, pending download): pole-mounted surveillance/ALPR camera against sky.
+     <img src="/images/flock-psa/[file].jpg" alt="A pole-mounted surveillance camera against an open sky" /> -->
+
 If you drive around Pasadena or Altadena, you may have noticed new cameras appearing at intersections — small, solar-paneled, mounted on their own poles, aimed at traffic. I noticed them too, and went looking for what they actually do. This post is the summary I wish someone had handed me: what these cameras are, where the data goes, and what's worth asking your local officials. Consider it a neighbor-to-neighbor PSA.
 
 ## What they are {#what-they-are}
@@ -23,6 +26,9 @@ Flock's "Falcon" cameras photograph every passing vehicle and log the plate, mak
 This isn't a red-light camera or a traffic counter. It's a searchable, time-stamped record of where your car has been.
 
 ## The part most people don't know {#the-part-most-people-dont-know}
+
+<!-- IMAGE SLOT 2 (Scopio, pending download): night intersection / highway long-exposure, "everyone all the time".
+     <img src="/images/flock-psa/[file].jpg" style="float:right; margin:0 0 1em 1em; max-width:400px;" alt="Light trails of traffic through a city intersection at night" /> -->
 
 The local pitch is reassuring: data is retained for 30 days, the city owns it, it auto-deletes. Some of that is even contractually true in some cities. But two findings from the national reporting change the picture:
 
@@ -65,6 +71,10 @@ If you take one thing from this post, make it these — at a council meeting, in
 None of this requires believing your local police department acts in bad faith. The Texas search and the Illinois violations happened through the network's *design*: local cameras, approved locally for local purposes, searchable nationally for purposes no council ever voted on. That's the gap between what gets approved and what gets built — and it's exactly the kind of gap that closes only when residents ask precise questions early.
 
 ## The constitutional stakes {#the-constitutional-stakes}
+
+<img src="/ox-hugo/DSC_0724-hdr.jpg" alt="A lone car on an empty desert two-lane highway under a vast cloud-streaked sky, Mojave Desert" />
+
+*A camera-free road. Mojave Desert, on old Route 66.*
 
 It's worth naming the principle underneath the practical questions: the Fourth Amendment's guarantee against unreasonable searches. The settled doctrine sounds permissive — a camera photographing your plate on a public road isn't a "search," because you have no reasonable expectation of privacy in a single trip down a public street (*United States v. Knotts*, 1983). Each Flock camera, taken alone, stands on that ground.
 
