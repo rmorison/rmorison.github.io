@@ -64,6 +64,14 @@ If you take one thing from this post, make it these — at a council meeting, in
 
 None of this requires believing your local police department acts in bad faith. The Texas search and the Illinois violations happened through the network's *design*: local cameras, approved locally for local purposes, searchable nationally for purposes no council ever voted on. That's the gap between what gets approved and what gets built — and it's exactly the kind of gap that closes only when residents ask precise questions early.
 
+## The constitutional stakes {#the-constitutional-stakes}
+
+It's worth naming the principle underneath the practical questions: the Fourth Amendment's guarantee against unreasonable searches. The settled doctrine sounds permissive — a camera photographing your plate on a public road isn't a "search," because you have no reasonable expectation of privacy in a single trip down a public street (*United States v. Knotts*, 1983). Each Flock camera, taken alone, stands on that ground.
+
+But the Supreme Court has already signaled that *aggregation changes the analysis*. In *United States v. Jones* (2012), five justices flagged that long-term location tracking implicates privacy in ways isolated observation doesn't. In [*Carpenter v. United States* (2018)](https://www.supremecourt.gov/opinions/17pdf/16-402_h315.pdf), the Court held that a "detailed, encyclopedic, and effortlessly compiled" record of a person's movements is a search requiring a warrant — even though each individual data point was held by a third party. A national network of 83,000 cameras producing a retained, retrospectively searchable index of everyone's driving is a fair description of what *Carpenter* was worried about, built at scale.
+
+The courts haven't settled whether ALPR dragnets cross that line — Massachusetts' high court has said a handful of cameras doesn't but a pervasive network might (*Commonwealth v. McCarthy*, 2020); the Institute for Justice is pressing the Fourth Amendment question directly against Norfolk, Virginia's Flock network; and the San Jose suit raises the California Constitution's even stronger privacy guarantees. These cases are being decided *now*, on facts that look exactly like the cameras going up at our intersections. Which is one more reason the retention, sharing, and audit questions above aren't bureaucratic trivia — they're the record on which the constitutional line will be drawn.
+
 ---
 
 *Method note: this post distills a longer research brief assembled with an AI deep-research pipeline — 24 sources, 119 extracted claims, 25 of them put through a three-vote adversarial fact-check (22 confirmed, 3 refuted — including two of Flock's own privacy claims). National findings are verified; local Pasadena/Altadena specifics come from local news and are flagged as leads to confirm. Vendor scale figures are Flock's self-reported marketing.*
