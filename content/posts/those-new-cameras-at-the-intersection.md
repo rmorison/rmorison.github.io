@@ -1,0 +1,98 @@
++++
+title = "PSA: About Those New Cameras at the Intersection"
+author = ["Rod Morison"]
+date = 2026-06-12T16:53:00-07:00
+tags = ["privacy", "surveillance", "alpr", "pasadena", "altadena"]
+draft = false
+topics = ["Privacy", "Surveillance"]
+description = "New license-plate readers are going up around Pasadena and Altadena. Here's what they are, where your data goes (much further than you'd think), and the four questions worth asking before the next council meeting."
++++
+
+<!-- hand-authored Hugo markdown — NOT an ox-hugo export from org/all-posts.org.
+     Do not create an org entry with EXPORT_FILE_NAME "those-new-cameras-at-the-intersection"
+     or ox-hugo will overwrite this file. -->
+
+<img src="/ox-hugo/flock-camera-eye-dusk.jpg" style="display:block; margin:0 auto 0.5em; max-width:460px; width:100%;" alt="A solar-powered Flock automated license-plate-reader camera on a pole at dusk, its lens facing the viewer like an eye against dark, blurred foliage" />
+
+<p style="text-align:center; font-style:italic;">A Flock camera, watching a residential neighborhood.</p>
+
+If you drive around Pasadena or Altadena, you may have noticed new cameras appearing at intersections — small, solar-paneled, mounted on their own poles, aimed at traffic. I noticed them too, and went looking for what they actually do. This post is the summary I wish someone had handed me: what these cameras are, where the data goes, and what's worth asking your local officials. Consider it a neighbor-to-neighbor PSA.
+
+## What they are {#what-they-are}
+
+The cameras are almost certainly automated license-plate readers (ALPRs), and the dominant vendor in this market — by a wide margin — is <a href="https://www.flocksafety.com" target="_blank" rel="noopener noreferrer">Flock Safety</a>. Pasadena PD already operates a Flock network that local reporting puts at roughly 73 cameras and growing (<a href="https://pasadenanow.com/main/pasadena-expands-flock-network-to-73-cameras-as-residents-demand-transparency-limits" target="_blank" rel="noopener noreferrer">Pasadena Now</a>).
+
+Flock's "Falcon" cameras photograph every passing vehicle and log the plate, make, model, color, time, and location. You can be searched by "vehicle signature" even without a plate match. The feeds roll up into <a href="https://www.flocksafety.com/products/flock-os" target="_blank" rel="noopener noreferrer">FlockOS</a>, a real-time platform that fuses plate reads, live video, gunshot detection, and 911 data across connected agencies. Flock's own marketing claims 12,000+ communities and 4,800+ law-enforcement agencies.
+
+This isn't a red-light camera or a traffic counter. It's a searchable, time-stamped record of where your car has been.
+
+## The part most people don't know {#the-part-most-people-dont-know}
+
+<img src="/ox-hugo/flock-camera-eye-twilight-sky.jpg" style="float:right; margin:0 0 1em 1.25em; max-width:340px;" alt="A Flock surveillance camera silhouetted against a deep blue dusk sky, its lens just visible" />
+
+The local pitch is reassuring: data is retained for 30 days, the city owns it, it auto-deletes. Some of that is even contractually true in some cities. But two findings from the national reporting change the picture:
+
+**First, the network.** Flock operates a <a href="https://www.flocksafety.com/products/national-lpr-network" target="_blank" rel="noopener noreferrer">National LPR Network</a>. Any enrolled agency can run a single query reaching **83,000+ cameras across roughly 6,800 networks** nationwide. Enrollment is a toggle — "Enable National Lookup" — and about three-quarters of Flock's law-enforcement customers have it on. One audit logged **450,000+ nationwide searches in a single 30-day window** in spring 2025. The <a href="https://www.aclu.org/news/privacy-technology/flock-massachusetts-and-updates" target="_blank" rel="noopener noreferrer">ACLU found</a> data can sometimes be shared even when an agency opts out. So "our city keeps its data 30 days" can quietly coexist with "7,000 agencies across the country can search it."
+
+**Second, the fine print moved.** In early 2026, Flock rewrote its national Terms & Conditions. The prior pledge that "Flock does not own and shall not sell Customer Data" was removed, and Flock granted itself a perpetual, irrevocable license to use customer data — surviving even contract termination. Cities nominally "own" their data, but watchdog investigations found departing customers receiving altered, low-resolution, metadata-stripped exports rather than raw footage. Flock calls this standard SaaS practice. Maybe so — but it's not what city councils thought they approved in 2023.
+
+It's worth saying plainly: in the fact-checking behind this post, two of Flock's own privacy reassurances — that access is "restricted to approved users based on job role" and that "nothing is shared unless the customer chooses" — did **not** survive verification against the documented evidence.
+
+## Not hypothetical {#not-hypothetical}
+
+The abuse cases are documented, not speculative:
+
+- A Texas sheriff's office <a href="https://www.eff.org/deeplinks/2025/05/she-got-abortion-so-texas-cop-used-83000-cameras-track-her-down" target="_blank" rel="noopener noreferrer">searched 83,000+ cameras across 6,809 networks to track a woman suspected of having an abortion</a> — the recorded search reason was "had an abortion, search for female" — including queries against cameras in Washington and Illinois, where abortion is legal.
+- Officers keep using Flock to stalk current and former partners. Reporters and the Institute for Justice have <a href="https://www.404media.co/cops-keep-getting-arrested-for-using-flock-to-stalk-people/" target="_blank" rel="noopener noreferrer">documented at least 18 such cases since 2024</a>: a Milwaukee officer ran Flock searches on a woman he had dated and her ex-partner well over 100 times (reason logged: "investigation"); a Florida officer searched his ex-girlfriend's and her parents' plates more than 100 times; others tracked estranged wives. Nearly all were criminally charged and lost their jobs — and almost every case was surfaced by the victim or a journalist, not the department that ran the searches.
+- Flock allowed U.S. Customs and Border Protection to access Illinois plate data in violation of a 2023 Illinois law barring LPR sharing for immigration or abortion enforcement; the Illinois Secretary of State audited Flock and ordered the access shut off.
+- By February 2026, <a href="https://www.npr.org/2026/02/17/nx-s1-5612825/flock-contracts-canceled-immigration-survillance-concerns" target="_blank" rel="noopener noreferrer">NPR reported</a> at least 30 localities had deactivated cameras or canceled Flock contracts, largely over fears that local cameras were feeding federal immigration enforcement — with audit logs suggesting local departments running searches on behalf of federal agencies after direct federal access was cut.
+- The EFF and ACLU of Northern California are <a href="https://www.eff.org/press/releases/lawsuit-challenges-san-joses-warrantless-alpr-mass-surveillance" target="_blank" rel="noopener noreferrer">suing San Jose</a> over its ~500-camera ALPR network, arguing warrantless mass surveillance violates the California Constitution.
+
+California has real guardrails on paper — Civil Code §1798.90.5 limits ALPR retention and sharing, and Gov. Code §7284 restricts immigration cooperation. But the California DOJ itself has flagged local police departments as the weak link in enforcing the ALPR law, and <a href="https://laist.com/news/california-police-license-plate-data-ice-border-patrol-illegal" target="_blank" rel="noopener noreferrer">LAist</a> has reported California agencies sharing plate data with ICE and Border Patrol unlawfully.
+
+## Closer to home {#closer-to-home}
+
+<img src="/ox-hugo/flock-intersection-stop-sign.jpg" style="display:block; margin:0 auto 0.5em; max-width:360px; width:100%;" alt="A Flock license-plate-reader camera mounted above an all-way STOP sign at a residential intersection, a car passing through below" />
+
+<p style="text-align:center; font-style:italic;">An automated license-plate reader presides over a four-way stop — every passing car logged.</p>
+
+A few local threads worth following (these are from local reporting — verify the current numbers yourself):
+
+- Pasadena PD's network is around **73 cameras**, expanded amid resident calls for transparency and limits.
+- Altadena is unincorporated, so its policing — and any cameras there — falls to the **LA County Sheriff**, a different operator with different oversight than Pasadena PD. An LA County oversight panel has asked Altadena and Pasadena residents to weigh in on plate surveillance.
+- Next door, some South Pasadena residents are pushing to remove that city's Flock readers entirely.
+
+Crowdsourced maps can show you what's deployed near you: <a href="https://deflock.me" target="_blank" rel="noopener noreferrer">DeFlock</a> maps ALPR locations nationwide, and <a href="https://haveibeenflocked.com" target="_blank" rel="noopener noreferrer">Have I Been Flocked?</a> checks whether your plate appears in published Flock audit logs.
+
+## Four questions worth asking {#four-questions-worth-asking}
+
+If you take one thing from this post, make it these — at a council meeting, in a public-comment letter, or to the oversight panel:
+
+1. **Who owns the new cameras** at a given intersection — Pasadena PD, LA County Sheriff, or a private party (HOA, business) feeding the same network?
+2. **What's the retention period, and does the contract still guarantee city ownership and raw-data access** under Flock's post-2026 terms?
+3. **Is the local network enrolled in National Lookup?** If so, out-of-state and federally-tasked queries can reach it. Are California's §1798.90.5 restrictions actually configured — and audited?
+4. **What happens when the precedents land?** The San Jose lawsuit and the Illinois audit will shape what's legal here. Is our contract written to adapt, or are we locked in?
+
+None of this requires believing your local police department acts in bad faith. The Texas search and the Illinois violations happened through the network's *design*: local cameras, approved locally for local purposes, searchable nationally for purposes no council ever voted on. That's the gap between what gets approved and what gets built — and it's exactly the kind of gap that closes only when residents ask precise questions early.
+
+## The constitutional stakes {#the-constitutional-stakes}
+
+<img src="/ox-hugo/DSC_0724-hdr.jpg" alt="A lone car on an empty desert two-lane highway under a vast cloud-streaked sky, Mojave Desert" />
+
+*A camera-free road. Mojave Desert, on old Route 66.*
+
+It's worth naming the principle underneath the practical questions: the Fourth Amendment's guarantee against unreasonable searches. The settled doctrine sounds permissive — a camera photographing your plate on a public road isn't a "search," because you have no reasonable expectation of privacy in a single trip down a public street (*United States v. Knotts*, 1983). Each Flock camera, taken alone, stands on that ground.
+
+But the Supreme Court has already signaled that *aggregation changes the analysis*. In *United States v. Jones* (2012), five justices flagged that long-term location tracking implicates privacy in ways isolated observation doesn't. In <a href="https://www.supremecourt.gov/opinions/17pdf/16-402_h315.pdf" target="_blank" rel="noopener noreferrer"><em>Carpenter v. United States</em> (2018)</a>, the Court held that a "detailed, encyclopedic, and effortlessly compiled" record of a person's movements is a search requiring a warrant — even though each individual data point was held by a third party. A national network of 83,000 cameras producing a retained, retrospectively searchable index of everyone's driving is a fair description of what *Carpenter* was worried about, built at scale.
+
+The courts haven't settled whether ALPR dragnets cross that line — Massachusetts' high court has said a handful of cameras doesn't but a pervasive network might (*Commonwealth v. McCarthy*, 2020); the Institute for Justice is pressing the Fourth Amendment question directly against Norfolk, Virginia's Flock network; and the San Jose suit raises the California Constitution's even stronger privacy guarantees. These cases are being decided *now*, on facts that look exactly like the cameras going up at our intersections. Which is one more reason the retention, sharing, and audit questions above aren't bureaucratic trivia — they're the record on which the constitutional line will be drawn.
+
+The whole argument turns on a single sentence, ratified in 1791:
+
+> The right of the people to be secure in their persons, houses, papers, and effects, against unreasonable searches and seizures, shall not be violated, and no Warrants shall issue, but upon probable cause, supported by Oath or affirmation, and particularly describing the place to be searched, and the persons or things to be seized.
+
+<p style="text-align:right; font-style:italic;">— <a href="https://constitution.congress.gov/constitution/amendment-4/" target="_blank" rel="noopener noreferrer">U.S. Constitution, Amendment IV</a></p>
+
+---
+
+*Method note: this post distills a longer research brief assembled with an AI deep-research pipeline — 24 sources, 119 extracted claims, 25 of them put through a three-vote adversarial fact-check (22 confirmed, 3 refuted — including two of Flock's own privacy claims). National findings are verified; local Pasadena/Altadena specifics come from local news and are flagged as leads to confirm. Vendor scale figures are Flock's self-reported marketing.*
