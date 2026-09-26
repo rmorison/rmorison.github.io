@@ -288,6 +288,8 @@ Put together, this is a small private "agent cloud": several independent agents 
 
 It isn't a replacement for the cloud product so much as the open-ended version of it. When I want a quick, disposable session, I still use theirs. When I want a team of agents on a repo I care about, they run here.
 
+{{< figure src="/ox-hugo/claude-code-own-cloud-keyboard-bench.jpg" alt="A piano keyboard under restoration on a scarred wooden workbench, hand tools, punches and tape rolls hanging on the wall behind it" >}}
+
 **P.S.** I don't cover Docker or Podman here, but they're the obvious next step: agents will want test databases and `docker compose up`. Don't solve it by adding the account to the `docker` group. That's root-equivalent, and container traffic routes around the per-uid firewall. A rootless Docker daemon (or rootless Podman) owned by the agent account keeps both boundaries intact. That's a post of its own.
 
 ---
