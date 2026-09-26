@@ -2,9 +2,9 @@
 title = "Your Own Claude Code Cloud: Remote Control, Worktrees, and a Locked-Down Unix Account"
 author = ["Rod Morison"]
 date = 2026-09-26T15:58:00-07:00
-tags = ["claude-code", "ai-agents", "linux", "systemd", "nftables", "self-hosting"]
+tags = ["ai", "claude-code", "security"]
 draft = true
-topics = ["AI Agents", "DevOps", "Linux"]
+topics = ["AI", "Claude", "Security"]
 description = "How to run several independent Claude Code agents per repo on a server you control: a dedicated unix account, an egress firewall, systemd-managed Remote Control, git worktrees, plugins, and signed commits. An open-ended alternative to cloud sessions."
 +++
 
@@ -31,12 +31,12 @@ claude.ai / desktop / phone
         │   (outbound HTTPS only, no inbound ports)
         ▼
 ┌──────────────────────── your server ────────────────────────┐
-│  unix user: rod-dev   (no password, no sudo, no ssh keys)   │
+│  unix user: ai-dev   (no password, no sudo, no ssh keys)    │
 │   ├─ claude-rc@engineering-standards.service  ── up to 4 ── │──► worktree per session
 │   ├─ claude-rc@buzai.service                  ── up to 4 ── │──► worktree per session
 │   ├─ ~/.claude   plugins, settings (user scope)             │
 │   └─ ~/projects/github.com/<owner>/<repo>                   │
-│  nftables: rod-dev may reach web, DNS, GitHub ssh. Nothing  │
+│  nftables: ai-dev may reach web, DNS, GitHub ssh. Nothing   │
 │            else, including the server's own mail/db/cache.  │
 │  systemd slice: memory + CPU capped                         │
 └─────────────────────────────────────────────────────────────┘
@@ -48,32 +48,32 @@ In the claude.ai session picker, each repo shows up under **Remote Control**. Cl
 
 ## 1. A Dedicated Account {#a-dedicated-account}
 
-Agents run shell commands, and in auto mode they don't ask first. So they don't run as me. My convention is one `<name>-dev` account per separately threaded body of work. This one is `rod-dev`.
+Agents run shell commands, and in auto mode they don't ask first. So they don't run as me. My convention is one `<name>-dev` account per separately threaded body of work. This one is `ai-dev`.
 
 ```bash
-sudo adduser --disabled-password --gecos "Rod dev agents" rod-dev
-sudo chmod 750 /home/rod-dev
-sudo loginctl enable-linger rod-dev
-sudo systemctl set-property user-$(id -u rod-dev).slice MemoryMax=12G CPUQuota=500%
+sudo adduser --disabled-password --gecos "AI dev agents" ai-dev
+sudo chmod 750 /home/ai-dev
+sudo loginctl enable-linger ai-dev
+sudo systemctl set-property user-$(id -u ai-dev).slice MemoryMax=12G CPUQuota=500%
 ```
 
 - **No password, no sudo, no groups.** Watch out for `docker` in particular: membership in it is root in all but name.
-- **No SSH keys either.** I get in from my own account with `sudo -iu rod-dev`. Remote Control only makes outbound connections, so the account never needs to accept a login.
-- **Linger** keeps rod-dev's systemd *user* services running across reboots and logouts.
+- **No SSH keys either.** I get in from my own account with `sudo -iu ai-dev`. Remote Control only makes outbound connections, so the account never needs to accept a login.
+- **Linger** keeps ai-dev's systemd *user* services running across reboots and logouts.
 - **The slice caps** memory and CPU (5 of 8 cores here), so a runaway test suite can't starve everything else on the box.
 
 ## 2. An Egress Firewall for That Account Only {#an-egress-firewall}
 
 This step matters more than it looks. A typical server runs services on localhost that trust *any local user*: an MTA that relays mail from 127.0.0.1, a Redis or memcached with no password, and so on. A hijacked agent that can talk to your MTA can send mail as you, from your IP.
 
-nftables (the successor to iptables; on recent Ubuntu, `iptables` is already a front end to it) can match packets on the **uid of the process that sent them**. The table below applies only to rod-dev and leaves every other user alone. It's a separate table, so it coexists with ufw. A packet has to pass both, and a drop in either wins.
+nftables (the successor to iptables; on recent Ubuntu, `iptables` is already a front end to it) can match packets on the **uid of the process that sent them**. The table below applies only to ai-dev and leaves every other user alone. It's a separate table, so it coexists with ufw. A packet has to pass both, and a drop in either wins.
 
-`/etc/nftables-rod-dev.nft`:
+`/etc/nftables-ai-dev.nft`:
 
 ```nft
-table inet rod_dev {}
-delete table inet rod_dev
-table inet rod_dev {
+table inet ai_dev {}
+delete table inet ai_dev
+table inet ai_dev {
   set local_svcs {
     type inet_service
     elements = { 25, 465, 587, 5432, 6379, 11211 }   # mail, postgres, redis, memcached: list yours
@@ -89,7 +89,7 @@ table inet rod_dev {
   }
   chain out {
     type filter hook output priority 0; policy accept;
-    meta skuid != "rod-dev" accept              # everyone else: untouched
+    meta skuid != "ai-dev" accept               # everyone else: untouched
     ct state established,related accept
     oif "lo" tcp dport @local_svcs drop         # no local mail/db/cache
     oif "lo" accept                             # DNS stub + its own dev servers
@@ -109,34 +109,34 @@ List the ports your own box actually listens on (`ss -ltnp`) in `local_svcs`. Th
 Load it, persist it with a small oneshot unit, and test it. Don't put it in `/etc/nftables.conf`: that file starts with `flush ruleset`, which would wipe ufw's rules too.
 
 ```bash
-sudo nft -c -f /etc/nftables-rod-dev.nft && sudo nft -f /etc/nftables-rod-dev.nft
+sudo nft -c -f /etc/nftables-ai-dev.nft && sudo nft -f /etc/nftables-ai-dev.nft
 
-sudo tee /etc/systemd/system/nft-rod-dev.service >/dev/null <<'EOF'
+sudo tee /etc/systemd/system/nft-ai-dev.service >/dev/null <<'EOF'
 [Unit]
-Description=nftables egress policy for rod-dev
+Description=nftables egress policy for ai-dev
 After=network-pre.target ufw.service
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/nft -f /etc/nftables-rod-dev.nft
+ExecStart=/usr/sbin/nft -f /etc/nftables-ai-dev.nft
 RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload && sudo systemctl enable --now nft-rod-dev
+sudo systemctl daemon-reload && sudo systemctl enable --now nft-ai-dev
 
 # Expect: BLOCKED · an HTTP status line · OPEN · BLOCKED
-sudo -u rod-dev timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/25' && echo OPEN || echo BLOCKED
-sudo -u rod-dev curl -sI https://api.anthropic.com | head -1
-sudo -u rod-dev timeout 5 bash -c 'exec 3<>/dev/tcp/github.com/22' && echo OPEN || echo BLOCKED
-sudo -u rod-dev timeout 5 bash -c 'exec 3<>/dev/tcp/gitlab.com/22' && echo OPEN || echo BLOCKED
+sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/25' && echo OPEN || echo BLOCKED
+sudo -u ai-dev curl -sI https://api.anthropic.com | head -1
+sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/github.com/22' && echo OPEN || echo BLOCKED
+sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/gitlab.com/22' && echo OPEN || echo BLOCKED
 ```
 
-**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: rod-dev simply can't read your home directory, your secrets or your mail.
+**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail.
 
 ## 3. Install Claude Code and Log In {#install-claude-code}
 
 ```bash
-sudo -iu rod-dev
+sudo -iu ai-dev
 ```
 
 Two gotchas before you paste anything else:
@@ -160,7 +160,7 @@ Every agent here draws on your one subscription's usage limits. That's worth kno
 
 ## 4. GitHub Access, Scoped Down {#github-access}
 
-Give rod-dev a **fine-grained personal access token**, not your everyday credentials:
+Give ai-dev a **fine-grained personal access token**, not your everyday credentials:
 
 - **Resource owner:** you. **Expiration:** 90 days.
 - **Repository access:** *Only select repositories*.
@@ -187,11 +187,11 @@ A systemd **template unit** gives you one Remote Control server per repo, each n
 
 ```ini
 [Unit]
-Description=Claude Code Remote Control (rod-dev: %i)
+Description=Claude Code Remote Control (ai-dev: %i)
 After=network-online.target
 [Service]
 WorkingDirectory=%h/projects/github.com/<owner>/%i
-ExecStart=%h/.local/bin/claude remote-control --name rod-dev-%i --spawn worktree --capacity 4 --permission-mode auto
+ExecStart=%h/.local/bin/claude remote-control --name ai-dev-%i --spawn worktree --capacity 4 --permission-mode auto
 Restart=always
 RestartSec=10s
 Environment=PATH=%h/.local/bin:/snap/bin:/usr/local/bin:/usr/bin:/bin
@@ -210,7 +210,7 @@ The three flags that make this work:
 ```bash
 cd ~/projects/github.com/<owner>/<repo>
 claude                                        # choose "Yes, I trust this folder", then /exit
-echo y | timeout 8 claude remote-control --name rod-dev-<repo>   # one-time "Enable Remote Control?"
+echo y | timeout 8 claude remote-control --name ai-dev-<repo>   # one-time "Enable Remote Control?"
 ```
 
 Then:
@@ -221,7 +221,7 @@ systemctl --user enable --now claude-rc@<repo>
 journalctl --user -u claude-rc@<repo> -f
 ```
 
-To make auto mode the default for sessions you start by hand in a rod-dev shell too:
+To make auto mode the default for sessions you start by hand in a ai-dev shell too:
 
 ```bash
 f=~/.claude/settings.json; [ -f "$f" ] || echo '{}' > "$f"
@@ -245,7 +245,7 @@ Sessions that were already open before the restart won't see new plugins; new on
 Cloud sessions produce "Verified" commits. Yours can too, with an SSH signing key:
 
 ```bash
-ssh-keygen -t ed25519 -C "rod-dev commit signing" -f ~/.ssh/id_ed25519_signing -N "" && \
+ssh-keygen -t ed25519 -C "ai-dev commit signing" -f ~/.ssh/id_ed25519_signing -N "" && \
 git config --global gpg.format ssh && \
 git config --global user.signingkey ~/.ssh/id_ed25519_signing.pub && \
 git config --global commit.gpgsign true && \
@@ -285,3 +285,7 @@ The last row is the whole game. The cloud gives you isolation for free. On your 
 Put together, this is a small private "agent cloud": several independent agents per repo, reachable from a phone, with persistent tooling and a security boundary I can reason about line by line. And adding a repo is a clone, a trust prompt, and one `systemctl --user enable --now claude-rc@<repo>`.
 
 It isn't a replacement for the cloud product so much as the open-ended version of it. When I want a quick, disposable session, I still use theirs. When I want a team of agents on a repo I care about, they run here.
+
+---
+
+<p style="font-size:0.85em; color:#666; margin-top:2em;">Written with the editorial assistance of <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a>. Drafted by Opus via <a href="https://www.claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>, from the session that did the setup described here.</p>
