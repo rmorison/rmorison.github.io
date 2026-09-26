@@ -12,6 +12,8 @@ description = "How to run several independent Claude Code agents per repo on a s
      Do not create an org entry with EXPORT_FILE_NAME "claude-code-own-cloud"
      or ox-hugo will overwrite this file. -->
 
+{{< figure src="/ox-hugo/claude-code-own-cloud-cumulus.jpg" alt="Towering storm clouds, dark on the left and sunlit white on the right, with a patch of deep blue sky between them" >}}
+
 ## Why Bother? {#why-bother}
 
 Claude Code's cloud sessions are great for a quick task against a GitHub repo: pick the repo, type a prompt, get a PR. But after a few weeks of real work in them I kept hitting the same walls:
