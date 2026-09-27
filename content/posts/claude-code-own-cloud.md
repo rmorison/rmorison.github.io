@@ -35,6 +35,22 @@ In the claude.ai session picker, each repo shows up under **Remote Control**. Cl
 
 **You'll need:** a Linux box with systemd (I'm on Ubuntu 22.04), sudo on it, a Claude Pro or Max subscription, and a GitHub account.
 
+### Or Let Claude Code Set It Up {#let-claude-code-set-it-up}
+
+I didn't type most of this. A Claude Code session on the same server drafted every command, and I ran the root ones. You can do the same. Point a session with SSH and sudo at this page, but keep it on a short leash:
+
+> Read https://rm.rmdashrf.net/posts/claude-code-own-cloud/ and set this up on this server for a user called `ai-dev` and the repo `<owner>/<repo>`. Show me each sudo command and wait for my OK before running it. Stop and hand me the terminal for the Claude login, the GitHub token, and the trust prompt. Run the firewall tests at the end and show me the raw output.
+
+Four steps stay yours: the Claude `/login`, creating and pasting the GitHub token, adding the signing key on GitHub, and the "trust this folder" prompt. Secrets should never pass through an agent's conversation.
+
+**Caveat emptor:** the agent doing the setup runs *outside* the protections it's building, as your admin account, with root. So don't run it in auto mode: approve each command. This is also exactly where **prompt injection** bites. A page that feeds an agent root commands is effectively running your server, and a copied, tampered-with or outright malicious version of these instructions could slip in one extra line you'd never notice.
+
+<ul style="list-style:none; padding-left:0.25em;">
+<li style="padding-left:0;"><span style="color:#3b82f6; font-weight:700; margin-right:0.5em;">➜</span><strong>Stick to the canonical URL.</strong></li>
+<li style="padding-left:0;"><span style="color:#3b82f6; font-weight:700; margin-right:0.5em;">➜</span><strong>Read every command before you approve it.</strong></li>
+<li style="padding-left:0;"><span style="color:#3b82f6; font-weight:700; margin-right:0.5em;">➜</span><strong>Read the test output yourself</strong> rather than taking "all green" on faith.</li>
+</ul>
+
 ## 1. A Dedicated Account {#a-dedicated-account}
 
 Agents run shell commands, and in auto mode they don't ask first. So they don't run as me. My convention is one `<name>-dev` account per separately threaded body of work. This one is `ai-dev`.
