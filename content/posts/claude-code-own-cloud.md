@@ -22,27 +22,13 @@ Claude Code's cloud sessions are great for a quick task against a GitHub repo: p
 - **One top-level agent per container.** Subagents, yes. But I wanted several *independent* agents on the same repo at once, each on its own branch, each one I can talk to directly.
 - **The environment is theirs, not mine.** Tooling, plugins, network policy and credentials are whatever the environment allows.
 
-Meanwhile I already run a dedicated Linux server. It hosts my mail and photos, plus an always-on Claude Code session that acts as my chief of staff. Claude Code's **Remote Control** mode lets a process on your own machine show up in claude.ai and the mobile app as a place to run sessions. Add git worktrees, a locked-down unix account, and systemd, and you get something that feels like the cloud product but is yours: persistent, extensible, and as open or closed as you choose to make it.
+Meanwhile I already run a dedicated Linux server. Claude Code's **Remote Control** mode lets a process on your own machine show up in claude.ai and the mobile app as a place to run sessions. Add git worktrees, a locked-down unix account, and systemd, and you get something that feels like the cloud product but is yours: persistent, extensible, and as open or closed as you choose to make it.
 
 This is the how-to.
 
 ## What You End Up With {#what-you-end-up-with}
 
-```text
-claude.ai / desktop / phone
-        │   (outbound HTTPS only, no inbound ports)
-        ▼
-┌──────────────────────── your server ────────────────────────┐
-│  unix user: ai-dev   (no password, no sudo, no ssh keys)    │
-│   ├─ claude-rc@engineering-standards.service  ── up to 4 ── │──► worktree per session
-│   ├─ claude-rc@buzai.service                  ── up to 4 ── │──► worktree per session
-│   ├─ ~/.claude   plugins, settings (user scope)             │
-│   └─ ~/projects/github.com/<owner>/<repo>                   │
-│  nftables: ai-dev may reach web, DNS, GitHub ssh. Nothing   │
-│            else, including the server's own mail/db/cache.  │
-│  systemd slice: memory + CPU capped                         │
-└─────────────────────────────────────────────────────────────┘
-```
+{{< figure src="/ox-hugo/claude-code-own-cloud-architecture.svg" alt="Architecture: your devices talk to Anthropic, and your server connects out to Anthropic over HTTPS with no inbound ports. On the server, a locked-down ai-dev account runs one Remote Control service per repo, each running up to four agents in their own git worktrees, sharing user-scope plugins and persistent clones. A per-user nftables policy allows only HTTPS, DNS and SSH to GitHub, and blocks the server's own mail, database and cache services." >}}
 
 In the claude.ai session picker, each repo shows up under **Remote Control**. Click **New**, pick the repo, type a prompt, and you've started another top-level agent in its own worktree.
 
@@ -70,9 +56,10 @@ This step matters more than it looks. A typical server runs services on localhos
 
 nftables (the successor to iptables; on recent Ubuntu, `iptables` is already a front end to it) can match packets on the **uid of the process that sent them**. The table below applies only to ai-dev and leaves every other user alone. It's a separate table, so it coexists with ufw. A packet has to pass both, and a drop in either wins.
 
-`/etc/nftables-ai-dev.nft`:
+**Create the rules file.** Adjust the `local_svcs` ports to match what your box listens on (check with `ss -ltnp`), then run this as a sudoer to write `/etc/nftables-ai-dev.nft`:
 
-```nft
+```bash
+sudo tee /etc/nftables-ai-dev.nft >/dev/null <<'EOF'
 table inet ai_dev {}
 delete table inet ai_dev
 table inet ai_dev {
@@ -104,11 +91,12 @@ table inet ai_dev {
     drop
   }
 }
+EOF
 ```
 
-List the ports your own box actually listens on (`ss -ltnp`) in `local_svcs`. The `table … {}` / `delete table …` pair at the top is a clean-reload idiom for older nft versions without `destroy`: reloading the file always gives you exactly its contents, never duplicate rules.
+The `table … {}` / `delete table …` pair at the top is a clean-reload idiom for older nft versions without `destroy`: reloading the file always gives you exactly its contents, never duplicate rules.
 
-Load it, persist it with a small oneshot unit, and test it. Don't put it in `/etc/nftables.conf`: that file starts with `flush ruleset`, which would wipe ufw's rules too.
+**Load it, persist it with a small oneshot unit, and test it.** Don't put the rules in `/etc/nftables.conf`: that file starts with `flush ruleset`, which would wipe ufw's rules too.
 
 ```bash
 sudo nft -c -f /etc/nftables-ai-dev.nft && sudo nft -f /etc/nftables-ai-dev.nft
@@ -162,13 +150,15 @@ Every agent here draws on your one subscription's usage limits. That's worth kno
 
 ## 4. GitHub Access, Scoped Down {#github-access}
 
-Give ai-dev a **fine-grained personal access token**, not your everyday credentials:
+**Create a fine-grained personal access token** for ai-dev, not your everyday credentials. On GitHub: Settings → Developer settings → Fine-grained tokens → Generate new token:
 
 - **Resource owner:** you. **Expiration:** 90 days.
 - **Repository access:** *Only select repositories*.
 - **Permissions:** Contents, Pull requests and Issues set to read/write. Actions and Commit statuses set to read. Add Workflows only if agents should edit CI.
 
 Adding a repo later means editing the token's repo list on GitHub; nothing changes on the box.
+
+**Then, as ai-dev, log `gh` in with the token and clone your first repo:**
 
 ```bash
 gh auth login --hostname github.com --git-protocol https   # "Paste an authentication token"
@@ -183,11 +173,13 @@ Pasting the token at `gh`'s prompt keeps it out of your shell history and proces
 
 ## 5. One Remote Control Service per Repo {#remote-control-service}
 
-A systemd **template unit** gives you one Remote Control server per repo, each named after it:
+A systemd **template unit** gives you one Remote Control server per repo, each named after it.
 
-`~/.config/systemd/user/claude-rc@.service`
+**Create the unit file.** As ai-dev, replace `<owner>` with your GitHub user or org, then run:
 
-```ini
+```bash
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/claude-rc@.service <<'EOF'
 [Unit]
 Description=Claude Code Remote Control (ai-dev: %i)
 After=network-online.target
@@ -199,9 +191,10 @@ RestartSec=10s
 Environment=PATH=%h/.local/bin:/snap/bin:/usr/local/bin:/usr/bin:/bin
 [Install]
 WantedBy=default.target
+EOF
 ```
 
-The three flags that make this work:
+The `%i` in the unit is the part after the `@`: enabling `claude-rc@myrepo` runs a server for `~/projects/github.com/<owner>/myrepo`. The three flags that make this work:
 
 - **`--spawn worktree`** gives every session started from claude.ai its own git worktree and branch, so concurrent agents never step on each other's files. The other modes are `same-dir` (the default) and `session` (a single classic session).
 - **`--capacity 4`** caps concurrent sessions per repo. The default is 32, which is more agents than your usage limits will feed.
@@ -215,7 +208,7 @@ claude                                        # choose "Yes, I trust this folder
 echo y | timeout 8 claude remote-control --name ai-dev-<repo>   # one-time "Enable Remote Control?"
 ```
 
-Then:
+**Then reload systemd, enable the service for the repo, and watch it start:**
 
 ```bash
 systemctl --user daemon-reload
@@ -223,7 +216,7 @@ systemctl --user enable --now claude-rc@<repo>
 journalctl --user -u claude-rc@<repo> -f
 ```
 
-To make auto mode the default for sessions you start by hand in a ai-dev shell too:
+To make auto mode the default for sessions you start by hand in an ai-dev shell too:
 
 ```bash
 f=~/.claude/settings.json; [ -f "$f" ] || echo '{}' > "$f"
@@ -233,6 +226,8 @@ jq '.permissions.defaultMode = "auto"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
 ## 6. Plugins, Installed Once {#plugins}
 
 Plugins installed at **user scope** apply to every session the account starts, in every repo. I use Every's [Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin: a brainstorm → plan → build → review → capture-learnings loop.
+
+**As ai-dev, install it and restart the services:**
 
 ```bash
 claude plugin marketplace add EveryInc/compound-engineering-plugin && \
@@ -244,7 +239,9 @@ Sessions that were already open before the restart won't see new plugins; new on
 
 ## 7. Signed Commits {#signed-commits}
 
-Cloud sessions produce "Verified" commits. Yours can too, with an SSH signing key:
+Cloud sessions produce "Verified" commits. Yours can too, with an SSH signing key.
+
+**As ai-dev, generate the key and turn on signing.** Use the same noreply address your commits use:
 
 ```bash
 ssh-keygen -t ed25519 -C "ai-dev commit signing" -f ~/.ssh/id_ed25519_signing -N "" && \
@@ -257,7 +254,7 @@ git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers && \
 cat ~/.ssh/id_ed25519_signing.pub
 ```
 
-On GitHub, go to Settings → SSH and GPG keys → **New SSH key** (not the GPG form), and set **Key type: Signing Key**. A signing key can sign commits but can't log in or push. There's no passphrase because unattended agents can't type one; if the box is ever compromised, delete the key on GitHub and it's dead. Git reads its config on every run, so already-running sessions pick this up with no restart.
+**Then register the printed public key on GitHub:** Settings → SSH and GPG keys → **New SSH key** (not the GPG form), set **Key type: Signing Key**, paste the whole line, and save. A signing key can sign commits but can't log in or push. There's no passphrase because unattended agents can't type one; if the box is ever compromised, delete the key on GitHub and it's dead. Git reads its config on every run, so already-running sessions pick this up with no restart.
 
 ## Using It {#using-it}
 
