@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 660" width="980" height="660" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Your own Claude Code cloud: architecture</title>
+  <desc>Devices connect to Anthropic; the server connects out to Anthropic over HTTPS. On the server, a locked-down ai-dev account runs one Remote Control service per repo, each spawning up to four agents in their own git worktrees. A per-user nftables policy lets the account reach only HTTPS, DNS and GitHub SSH, and blocks the server's own mail, database and cache services.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+    <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#15803d"/></marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="980" height="660" rx="16" fill="#f8fafc"/>
+
+  <!-- top row -->
+  <rect x="40" y="24" width="260" height="64" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="170" y="50" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">Your devices</text>
+  <text x="170" y="72" text-anchor="middle" font-size="13" fill="#475569">claude.ai · desktop app · phone</text>
+
+  <rect x="380" y="24" width="260" height="64" rx="10" fill="#fff7ed" stroke="#d97757" stroke-width="1.5"/>
+  <text x="510" y="50" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">Anthropic</text>
+  <text x="510" y="72" text-anchor="middle" font-size="13" fill="#475569">session routing (Remote Control)</text>
+
+  <line x1="304" y1="56" x2="374" y2="56" stroke="#334155" stroke-width="2" marker-start="url(#ah)" marker-end="url(#ah)"/>
+
+  <line x1="510" y1="150" x2="510" y2="94" stroke="#334155" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="522" y="118" font-size="13" fill="#334155">outbound HTTPS only · no inbound ports</text>
+
+  <!-- server -->
+  <rect x="24" y="150" width="932" height="490" rx="14" fill="#ffffff" stroke="#334155" stroke-width="2"/>
+  <text x="44" y="178" font-size="16" font-weight="700" fill="#0f172a">your server</text>
+
+  <!-- ai-dev account -->
+  <rect x="44" y="192" width="608" height="430" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="64" y="220" font-size="15" font-weight="700" fill="#1e3a8a">unix account <tspan font-family="ui-monospace, Menlo, Consolas, monospace">ai-dev</tspan></text>
+  <text x="64" y="240" font-size="12.5" fill="#1e40af">no password · no sudo · no SSH keys · systemd slice caps memory + CPU</text>
+
+  <!-- service 1 -->
+  <rect x="64" y="256" width="568" height="112" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="80" y="280" font-size="14" font-weight="700" fill="#0f172a" font-family="ui-monospace, Menlo, Consolas, monospace">claude-rc@engineering-standards.service</text>
+  <text x="80" y="299" font-size="11.5" fill="#475569" font-family="ui-monospace, Menlo, Consolas, monospace">remote-control --spawn worktree --capacity 4 --permission-mode auto</text>
+  <g font-size="12" fill="#0f172a" text-anchor="middle">
+    <rect x="80"  y="314" width="126" height="40" rx="7" fill="#dbeafe"/><text x="143" y="331">agent</text><text x="143" y="347" fill="#475569" font-size="11">own worktree</text>
+    <rect x="216" y="314" width="126" height="40" rx="7" fill="#dbeafe"/><text x="279" y="331">agent</text><text x="279" y="347" fill="#475569" font-size="11">own worktree</text>
+    <rect x="352" y="314" width="126" height="40" rx="7" fill="#dbeafe"/><text x="415" y="331">agent</text><text x="415" y="347" fill="#475569" font-size="11">own worktree</text>
+    <rect x="488" y="314" width="126" height="40" rx="7" fill="#ffffff" stroke="#93c5fd" stroke-dasharray="4 3"/><text x="551" y="338" fill="#64748b">free slot</text>
+  </g>
+
+  <!-- service 2 -->
+  <rect x="64" y="380" width="568" height="112" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="80" y="404" font-size="14" font-weight="700" fill="#0f172a" font-family="ui-monospace, Menlo, Consolas, monospace">claude-rc@buzai.service</text>
+  <text x="80" y="423" font-size="11.5" fill="#475569" font-family="ui-monospace, Menlo, Consolas, monospace">one Remote Control server per repo, same template unit</text>
+  <g font-size="12" fill="#0f172a" text-anchor="middle">
+    <rect x="80"  y="438" width="126" height="40" rx="7" fill="#dbeafe"/><text x="143" y="455">agent</text><text x="143" y="471" fill="#475569" font-size="11">own worktree</text>
+    <rect x="216" y="438" width="126" height="40" rx="7" fill="#ffffff" stroke="#93c5fd" stroke-dasharray="4 3"/><text x="279" y="462" fill="#64748b">free slot</text>
+    <rect x="352" y="438" width="126" height="40" rx="7" fill="#ffffff" stroke="#93c5fd" stroke-dasharray="4 3"/><text x="415" y="462" fill="#64748b">free slot</text>
+    <rect x="488" y="438" width="126" height="40" rx="7" fill="#ffffff" stroke="#93c5fd" stroke-dasharray="4 3"/><text x="551" y="462" fill="#64748b">free slot</text>
+  </g>
+
+  <!-- shared state -->
+  <rect x="64" y="506" width="276" height="100" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="80" y="532" font-size="13.5" font-weight="700" fill="#0f172a" font-family="ui-monospace, Menlo, Consolas, monospace">~/.claude</text>
+  <text x="80" y="553" font-size="12.5" fill="#475569">plugins + settings, user scope:</text>
+  <text x="80" y="571" font-size="12.5" fill="#475569">installed once, every session</text>
+  <text x="80" y="589" font-size="12.5" fill="#475569">in every repo gets them</text>
+
+  <rect x="356" y="506" width="276" height="100" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="372" y="532" font-size="13.5" font-weight="700" fill="#0f172a" font-family="ui-monospace, Menlo, Consolas, monospace">~/projects/github.com/</text>
+  <text x="372" y="551" font-size="13.5" font-weight="700" fill="#0f172a" font-family="ui-monospace, Menlo, Consolas, monospace">  &lt;owner&gt;/&lt;repo&gt;</text>
+  <text x="372" y="573" font-size="12.5" fill="#475569">persistent clones; scoped token,</text>
+  <text x="372" y="591" font-size="12.5" fill="#475569">SSH-signed commits</text>
+
+  <!-- firewall column -->
+  <text x="690" y="212" font-size="15" font-weight="700" fill="#0f172a">nftables: per-uid egress</text>
+  <text x="690" y="231" font-size="12" fill="#475569">applies only to ai-dev's traffic</text>
+
+  <rect x="690" y="252" width="246" height="58" rx="9" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="704" y="275" font-size="13.5" font-weight="700" fill="#14532d">✓ HTTPS 443</text>
+  <text x="704" y="295" font-size="12" fill="#166534">Anthropic, GitHub, package registries</text>
+
+  <rect x="690" y="322" width="246" height="42" rx="9" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="704" y="348" font-size="13.5" font-weight="700" fill="#14532d">✓ DNS 53</text>
+
+  <rect x="690" y="376" width="246" height="42" rx="9" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="704" y="402" font-size="13.5" font-weight="700" fill="#14532d">✓ SSH 22 → GitHub only</text>
+
+  <line x1="652" y1="300" x2="686" y2="282" stroke="#15803d" stroke-width="2" marker-end="url(#ahg)"/>
+  <line x1="652" y1="343" x2="686" y2="343" stroke="#15803d" stroke-width="2" marker-end="url(#ahg)"/>
+  <line x1="652" y1="386" x2="686" y2="397" stroke="#15803d" stroke-width="2" marker-end="url(#ahg)"/>
+
+  <rect x="690" y="478" width="246" height="100" rx="9" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="704" y="503" font-size="13.5" font-weight="700" fill="#7f1d1d">✕ the server's own services</text>
+  <text x="704" y="524" font-size="12" fill="#991b1b">mail relay · Postgres · Redis</text>
+  <text x="704" y="542" font-size="12" fill="#991b1b">memcached · anything else</text>
+  <text x="704" y="560" font-size="12" fill="#991b1b">on localhost or the public IP</text>
+  <line x1="652" y1="528" x2="686" y2="528" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ahr)"/>
+
+  <text x="690" y="606" font-size="12" fill="#475569">everything else from ai-dev: dropped</text>
+</svg>
