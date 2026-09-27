@@ -1,9 +1,9 @@
 +++
 title = "Your Own Claude Code Cloud: Remote Control, Worktrees, and a Locked-Down Unix Account"
 author = ["Rod Morison"]
-date = 2026-09-26T15:58:00-07:00
+date = 2026-09-27T10:45:00-07:00
 tags = ["ai", "claude-code", "security"]
-draft = true
+draft = false
 topics = ["AI", "Claude", "Security"]
 description = "How to run several independent Claude Code agents per repo on a server you control: a dedicated unix account, an egress firewall, systemd-managed Remote Control, git worktrees, plugins, and signed commits. An open-ended alternative to cloud sessions."
 +++
