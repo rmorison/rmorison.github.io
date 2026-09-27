@@ -121,7 +121,7 @@ sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/github.com/22' && echo OPEN |
 sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/gitlab.com/22' && echo OPEN || echo BLOCKED
 ```
 
-**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail.
+**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail. The secrets it *does* hold are covered in [step 8](#secrets).
 
 ## 3. Install Claude Code and Log In {#install-claude-code}
 
@@ -255,6 +255,26 @@ cat ~/.ssh/id_ed25519_signing.pub
 ```
 
 **Then register the printed public key on GitHub:** Settings → SSH and GPG keys → **New SSH key** (not the GPG form), set **Key type: Signing Key**, paste the whole line, and save. A signing key can sign commits but can't log in or push. There's no passphrase because unattended agents can't type one; if the box is ever compromised, delete the key on GitHub and it's dead. Git reads its config on every run, so already-running sessions pick this up with no restart.
+
+## 8. Secrets: What the Account Holds {#secrets}
+
+When you're done, ai-dev holds exactly three credentials. All are plain files readable only by the account (mode 600); a headless box has no keyring to put them in.
+
+| Secret | Where it lives | If it leaks, someone can… | Risk | Revoke |
+|---|---|---|---|---|
+| Claude login | `~/.claude/.credentials.json` | Run Claude Code on your subscription and burn your usage | Medium-high | `/logout`, or end the session in claude.ai settings |
+| GitHub token | `~/.config/gh/hosts.yml` | Push, open PRs and edit issues in the *selected repos only*, until it expires | Medium; low if `main` requires PRs | Delete the token on GitHub |
+| Signing key | `~/.ssh/id_ed25519_signing` | Make "Verified" commits in your name. It can't push or log in | Low-medium | Delete the signing key on GitHub |
+
+**The agents can read all of these.** They run as the same user, so there's no hiding a secret from them, and a malicious instruction buried in a web page or an issue could send one out over HTTPS. So the rule isn't "hide them well". It's **few, narrowly scoped, short-lived, and easy to revoke**.
+
+**Do these:**
+
+- **Protect `main`.** On GitHub, go to the repo's Settings → Branches and require a pull request before merging. A leaked token then gets "open a PR you'll review" instead of "push to production". It's one setting, and the best return in this table.
+- **Keep app secrets out of the account.** No `.env` files full of production keys in the clones or worktrees. If tests need credentials, use dev-only keys with low limits, or none. (I wrote this up as a standard of its own: [keep application secrets out of the developer's working tree](https://github.com/rmorison/engineering-standards/pull/46).)
+- **Know your revocation drill.** If the box is ever compromised, work down the table: log out Claude, delete the GitHub token, delete the signing key. It takes about five minutes.
+
+What's deliberately *not* in the account matters just as much: no personal cloud keys, no mail, nothing from your own account. That absence is the real protection.
 
 ## Using It {#using-it}
 
