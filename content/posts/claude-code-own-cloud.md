@@ -35,6 +35,16 @@ In the claude.ai session picker, each repo shows up under **Remote Control**. Cl
 
 **You'll need:** a Linux box with systemd (I'm on Ubuntu 22.04), sudo on it, a Claude Pro or Max subscription, and a GitHub account.
 
+### Or Let Claude Code Set It Up {#let-claude-code-set-it-up}
+
+Confession: I didn't type most of this. A Claude Code session on the same server drafted every command, and I ran the root ones. You can do the same. Point a session with SSH and sudo at this page, but keep it on a short leash:
+
+> Read https://rm.rmdashrf.net/posts/claude-code-own-cloud/ and set this up on this server for a user called `ai-dev` and the repo `<owner>/<repo>`. Show me each sudo command and wait for my OK before running it. Stop and hand me the terminal for the Claude login, the GitHub token, and the trust prompt. Run the firewall tests at the end and show me the raw output.
+
+Four steps stay yours: the Claude `/login`, creating and pasting the GitHub token, adding the signing key on GitHub, and the "trust this folder" prompt. Secrets should never pass through an agent's conversation.
+
+And be clear-eyed about the irony. The agent doing the setup runs *outside* the protections it's building, as your admin account, with root. So don't run it in auto mode. Approve each command, or better, have it write the root commands for you to run. Only point it at the canonical URL, since a page that feeds an agent root commands is effectively running your server. Read the test output yourself rather than taking "all green" on faith.
+
 ## 1. A Dedicated Account {#a-dedicated-account}
 
 Agents run shell commands, and in auto mode they don't ask first. So they don't run as me. My convention is one `<name>-dev` account per separately threaded body of work. This one is `ai-dev`.
