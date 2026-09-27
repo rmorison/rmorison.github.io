@@ -280,6 +280,10 @@ What's deliberately *not* in the account matters just as much: no personal cloud
 
 In claude.ai (or the desktop app, or the phone), start a new session, open the environment picker, and go to **Remote Control**. Each repo is listed with a count like *1 of 4 sessions*. Pick one and type. Every new session is another independent top-level agent in its own worktree.
 
+It's just as usable from a phone. Here's one of those agents from my pocket: connected to the server, working an issue in its own worktree, and waiting on a one-letter answer before it carries on.
+
+{{< figure src="/ox-hugo/claude-code-own-cloud-phone-session.png" width="540" alt="Claude mobile app session card titled '#47 narrow uv allow entries plan', showing a green Connected status for the rmorison/engineering-standards repo and a message asking the user to reply A or B" >}}
+
 A couple of things I learned the hard way:
 
 - **The picker shows folder names, not your `--name`.** If two services run in folders with the same name (say, two users' clones of the same repo), you'll see duplicates. The capacity number is how I tell them apart.
