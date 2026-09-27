@@ -28,7 +28,8 @@ This is the how-to.
 
 ## What You End Up With {#what-you-end-up-with}
 
-{{< figure src="/ox-hugo/claude-code-own-cloud-architecture.svg" alt="Architecture: your devices talk to Anthropic, and your server connects out to Anthropic over HTTPS with no inbound ports. On the server, a locked-down ai-dev account runs one Remote Control service per repo, each running up to four agents in their own git worktrees, sharing user-scope plugins and persistent clones. A per-user nftables policy allows only HTTPS, DNS and SSH to GitHub, and blocks the server's own mail, database and cache services." >}}
+<a href="/ox-hugo/claude-code-own-cloud-architecture.svg" target="_blank" rel="noopener"><img src="/ox-hugo/claude-code-own-cloud-architecture.svg" style="display:block; margin:1em auto; width:100%;" alt="Architecture: your devices talk to Anthropic, and your server connects out to Anthropic over HTTPS with no inbound ports. On the server, a locked-down ai-dev account runs one Remote Control service per repo, each running up to four agents in their own git worktrees, sharing user-scope plugins and persistent clones. A per-user nftables policy allows only HTTPS, DNS and SSH to GitHub, and blocks the server&#39;s own mail, database and cache services." /></a>
+<p style="text-align:center; font-size:0.85em; margin-top:-0.5em;"><em>Click the diagram to open it full size.</em></p>
 
 In the claude.ai session picker, each repo shows up under **Remote Control**. Click **New**, pick the repo, type a prompt, and you've started another top-level agent in its own worktree.
 
@@ -282,7 +283,7 @@ In claude.ai (or the desktop app, or the phone), start a new session, open the e
 
 It's just as usable from a phone. Here's one of those agents from my pocket: connected to the server, working an issue in its own worktree, and waiting on a one-letter answer before it carries on.
 
-<img src="/ox-hugo/claude-code-own-cloud-phone-session.png" style="display:block; margin:1em auto; max-width:540px; width:100%;" alt="Claude mobile app session card titled &#39;#47 narrow uv allow entries plan&#39;, showing a green Connected status for the rmorison/engineering-standards repo and a message asking the user to reply A or B" />
+<img src="/ox-hugo/claude-code-own-cloud-phone-session.png" style="display:block; margin:1em auto; max-width:540px; width:100%; border:1px solid #cbd5e1; border-radius:12px;" alt="Claude mobile app session card titled &#39;#47 narrow uv allow entries plan&#39;, showing a green Connected status for the rmorison/engineering-standards repo and a message asking the user to reply A or B" />
 
 A couple of things I learned the hard way:
 
