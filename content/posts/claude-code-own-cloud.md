@@ -43,11 +43,13 @@ I didn't type most of this. A Claude Code session on the same server drafted eve
 
 Four steps stay yours: the Claude `/login`, creating and pasting the GitHub token, adding the signing key on GitHub, and the "trust this folder" prompt. Secrets should never pass through an agent's conversation.
 
-**Caveat emptor:** the agent doing the setup runs *outside* the protections it's building, as your admin account, with root. So don't run it in auto mode: approve each command, or better, have it write the root commands for you to run. This is also exactly where **prompt injection** bites. A page that feeds an agent root commands is effectively running your server, and a copied, tampered-with or outright malicious version of these instructions could slip in one extra line you'd never notice.
+**Caveat emptor:** the agent doing the setup runs *outside* the protections it's building, as your admin account, with root. So don't run it in auto mode: approve each command. This is also exactly where **prompt injection** bites. A page that feeds an agent root commands is effectively running your server, and a copied, tampered-with or outright malicious version of these instructions could slip in one extra line you'd never notice.
 
-- **Stick to the canonical URL.**
-- **Read every command before you approve it.**
-- **Read the test output yourself** rather than taking "all green" on faith.
+<ul style="list-style:none; padding-left:0.25em;">
+<li style="padding-left:0;"><span style="color:#3b82f6; font-weight:700; margin-right:0.5em;">➜</span><strong>Stick to the canonical URL.</strong></li>
+<li style="padding-left:0;"><span style="color:#3b82f6; font-weight:700; margin-right:0.5em;">➜</span><strong>Read every command before you approve it.</strong></li>
+<li style="padding-left:0;"><span style="color:#3b82f6; font-weight:700; margin-right:0.5em;">➜</span><strong>Read the test output yourself</strong> rather than taking "all green" on faith.</li>
+</ul>
 
 ## 1. A Dedicated Account {#a-dedicated-account}
 
