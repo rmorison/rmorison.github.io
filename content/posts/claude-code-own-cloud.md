@@ -282,7 +282,7 @@ In claude.ai (or the desktop app, or the phone), start a new session, open the e
 
 It's just as usable from a phone. Here's one of those agents from my pocket: connected to the server, working an issue in its own worktree, and waiting on a one-letter answer before it carries on.
 
-{{< figure src="/ox-hugo/claude-code-own-cloud-phone-session.png" width="540" alt="Claude mobile app session card titled '#47 narrow uv allow entries plan', showing a green Connected status for the rmorison/engineering-standards repo and a message asking the user to reply A or B" >}}
+<img src="/ox-hugo/claude-code-own-cloud-phone-session.png" style="display:block; margin:1em auto; max-width:540px; width:100%;" alt="Claude mobile app session card titled &#39;#47 narrow uv allow entries plan&#39;, showing a green Connected status for the rmorison/engineering-standards repo and a message asking the user to reply A or B" />
 
 A couple of things I learned the hard way:
 
