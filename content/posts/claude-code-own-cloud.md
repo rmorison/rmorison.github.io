@@ -47,7 +47,7 @@ sudo systemctl set-property user-$(id -u ai-dev).slice MemoryMax=12G CPUQuota=50
 
 - **No password, no sudo, no groups.** Watch out for `docker` in particular: membership in it is root in all but name.
 - **No SSH keys either.** I get in from my own account with `sudo -iu ai-dev`. Remote Control only makes outbound connections, so the account never needs to accept a login.
-- **Linger** keeps ai-dev's systemd *user* services running across reboots and logouts.
+- **Linger** keeps ai-dev's systemd *user* services running across reboots and logouts. By default, Linux treats a user's personal background services as belonging to their login: log in and they start, log out and they're shut down, and after a reboot nothing runs until that user logs in again. That's sensible for a desktop, but ai-dev never logs in at all. It has no password, and you only borrow its shell now and then with `sudo`. Turning linger on tells systemd to start ai-dev's services at boot and keep them running whether or not anyone is logged in, which is what lets the Remote Control servers in step 5 behave like always-on server software rather than something that dies when you close your terminal.
 - **The slice caps** memory and CPU (5 of 8 cores here), so a runaway test suite can't starve everything else on the box.
 
 ## 2. An Egress Firewall for That Account Only {#an-egress-firewall}
