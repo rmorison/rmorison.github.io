@@ -37,13 +37,13 @@ In the claude.ai session picker, each repo shows up under **Remote Control**. Cl
 
 ### Or Let Claude Code Set It Up {#let-claude-code-set-it-up}
 
-Confession: I didn't type most of this. A Claude Code session on the same server drafted every command, and I ran the root ones. You can do the same. Point a session with SSH and sudo at this page, but keep it on a short leash:
+I didn't type most of this. A Claude Code session on the same server drafted every command, and I ran the root ones. You can do the same. Point a session with SSH and sudo at this page, but keep it on a short leash:
 
 > Read https://rm.rmdashrf.net/posts/claude-code-own-cloud/ and set this up on this server for a user called `ai-dev` and the repo `<owner>/<repo>`. Show me each sudo command and wait for my OK before running it. Stop and hand me the terminal for the Claude login, the GitHub token, and the trust prompt. Run the firewall tests at the end and show me the raw output.
 
 Four steps stay yours: the Claude `/login`, creating and pasting the GitHub token, adding the signing key on GitHub, and the "trust this folder" prompt. Secrets should never pass through an agent's conversation.
 
-And be clear-eyed about the irony. The agent doing the setup runs *outside* the protections it's building, as your admin account, with root. So don't run it in auto mode. Approve each command, or better, have it write the root commands for you to run. Only point it at the canonical URL, since a page that feeds an agent root commands is effectively running your server. Read the test output yourself rather than taking "all green" on faith.
+And be clear-eyed about the irony. The agent doing the setup runs *outside* the protections it's building, as your admin account, with root. So don't run it in auto mode: approve each command, or better, have it write the root commands for you to run. This is also exactly where **prompt injection** bites. A page that feeds an agent root commands is effectively running your server, and a copied, tampered-with or outright malicious version of these instructions could slip in one extra line you'd never notice. This site isn't malicious. (But would we tell you?) Stick to the canonical URL, read every command before you approve it, and read the test output yourself rather than taking "all green" on faith.
 
 ## 1. A Dedicated Account {#a-dedicated-account}
 
