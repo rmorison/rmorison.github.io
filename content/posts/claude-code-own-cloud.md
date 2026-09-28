@@ -189,16 +189,20 @@ The service unit in step 6 sets the same variable, so the Remote Control session
 
 The login shares more than connectors. Plugins attached to your account sync in, but they run inside the sandbox. The one to watch is **cross-session messaging**: Claude Code sessions on the same login can list and message each other, across machines and unix users. By default, a message from a session in the same permission class (auto and ordinary prompting count as one) goes straight into the receiving agent's conversation, with no approval. A hijacked agent here could message your other sessions, and they could message it.
 
-Close it from both ends with the `crossSessionInbound` setting. **As ai-dev, refuse inbound messages entirely:**
+The worry is mostly *outbound*: a hijacked agent messaging your more privileged sessions, the ones with your mail, your sudo, your files. There's no setting that stops an account from sending, so you close it on the **receiving** side with the `crossSessionInbound` setting.
+
+**On every machine where you run your own, trusted sessions, hold inbound messages for your review:**
 
 ```bash
 f=~/.claude/settings.json
-jq '.crossSessionInbound = "refuse"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+jq '.crossSessionInbound = "hold"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
 ```
 
-**On machines where you run your own, more privileged sessions, hold inbound messages for your review.** Run the same command with `"hold"` in that machine's `~/.claude/settings.json`.
+A held message waits for you to approve it and never reaches Claude on its own. Do it everywhere that matters: your laptop, your server account, any other user on the box running Claude. Don't lean on session names to tell friend from foe; a session names itself, and a hijacked one can call itself anything.
 
-I tested both. Sends to the agent account now fail outright ("can't receive cross-session messages"), and a message to a session on my laptop was parked for approval instead of reaching Claude. Both took effect on sessions that were already running.
+What about the agent account itself? `"refuse"` there blocks messages *into* it, but it also blocks messages *between* its own sessions. If your agents coordinate, say a PM agent directing workers, leave ai-dev on the default. I learned that one by breaking my own PM.
+
+I tested all of this. A message to a session on my laptop was parked for approval instead of reaching Claude, a `refuse` blocked sends outright, and both took effect on sessions that were already running. The complete fix, for outbound and everything else in this step, is to **give the agent account its own Anthropic login**. Then its sessions can only reach each other.
 
 ## 5. GitHub Access, Scoped Down {#github-access}
 
