@@ -183,7 +183,18 @@ claude mcp list        # expect no "claude.ai ..." entries
 
 The service unit in step 5 sets the same variable, so the Remote Control sessions honor it too. For added peace of mind, add a `permissions.deny` entry for each connector's tool prefix (for example `mcp__claude_ai_Gmail`), taking the names from what `claude mcp list` showed before you turned them off.
 
-The login shares more than connectors: plugins attached to your account sync in, and Claude Code sessions on the same account can list and message each other. None of that is as dangerous as connectors.
+The login shares more than connectors. Plugins attached to your account sync in, but they run inside the sandbox. The one to watch is **cross-session messaging**: Claude Code sessions on the same login can list and message each other, across machines and unix users. By default, a message from a session in the same permission class (auto and ordinary prompting count as one) goes straight into the receiving agent's conversation, with no approval. A hijacked agent here could message your other sessions, and they could message it.
+
+Close it from both ends with the `crossSessionInbound` setting. **As ai-dev, refuse inbound messages entirely:**
+
+```bash
+f=~/.claude/settings.json
+jq '.crossSessionInbound = "refuse"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+```
+
+**On machines where you run your own, more privileged sessions, hold inbound messages for your review.** Run the same command with `"hold"` in that machine's `~/.claude/settings.json`.
+
+I tested both. Sends to the agent account now fail outright ("can't receive cross-session messages"), and a message to a session on my laptop was parked for approval instead of reaching Claude. Both took effect on sessions that were already running.
 
 ## 4. GitHub Access, Scoped Down {#github-access}
 
