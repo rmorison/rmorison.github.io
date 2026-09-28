@@ -251,7 +251,7 @@ The `%i` in the unit is the part after the `@`: enabling `claude-rc@myrepo` runs
 
 - **`--spawn worktree`** gives every session started from claude.ai its own git worktree and branch, so concurrent agents never step on each other's files. The other modes are `same-dir` (the default) and `session` (a single classic session).
 - **`--capacity 4`** caps concurrent sessions per repo. The default is 32, which is more agents than your usage limits will feed.
-- **`--permission-mode auto`** starts spawned sessions in auto mode instead of asking before every command. That's reasonable *because* of steps 1 and 2; I wouldn't do it on my own account.
+- **`--permission-mode auto`** starts spawned sessions in auto mode instead of asking before every command. That's reasonable *because* of steps 1, 2 and 4; I wouldn't do it on my own account.
 
 **Before enabling the service, do two one-time steps from inside the repo.** Claude Code won't save "trust this folder" for your home directory, by design, and the service fails in a restart loop ("Workspace not trusted") until the repo itself is trusted:
 
@@ -354,7 +354,7 @@ A couple of things I learned the hard way:
 | Hardware                  | theirs, fast                | yours, as old or new as it is                |
 | Blast radius              | a disposable container      | whatever you let the account touch           |
 
-The last row is the whole game. The cloud gives you isolation for free. On your own box, isolation is something you build, which is what steps 1 and 2 are for. Do those first.
+The last row is the whole game. The cloud gives you isolation for free. On your own box, isolation is something you build, which is what steps 1, 2 and 4 are for. Do those first.
 
 ## Wrap-up {#wrap-up}
 
