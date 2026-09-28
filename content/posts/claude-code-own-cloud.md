@@ -138,7 +138,7 @@ sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/github.com/22' && echo OPEN |
 sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/gitlab.com/22' && echo OPEN || echo BLOCKED
 ```
 
-**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail. The secrets it *does* hold are covered in [step 8](#secrets).
+**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail. (Mail, Drive and friends come with one big asterisk: your Claude login's connectors, which [step 3](#turn-off-connectors) turns off.) The secrets it *does* hold are covered in [step 8](#secrets).
 
 ## 3. Install Claude Code and Log In {#install-claude-code}
 
@@ -164,6 +164,26 @@ claude
 Inside `claude`, run `/login` and pick the **Claude account with subscription**. On a headless box it prints a URL: open it on your laptop, sign in, and paste the code back.
 
 Every agent here draws on your one subscription's usage limits. That's worth knowing before you start several at once.
+
+### Turn Off Your claude.ai Connectors {#turn-off-connectors}
+
+This is the step I missed the first time, and it's the most important one in the post.
+
+Logging in with your claude.ai account brings the account's **connectors** with it. Whatever you've connected on claude.ai (Gmail, Google Drive, Calendar, Slack, Dropbox, your accounting system) shows up as tools in every Claude Code session on that login, on any machine. Run `claude mcp list` as ai-dev and look. I found nine, all connected. The unix account boundary doesn't touch them, because the access rides on the Claude login, not on files. The firewall doesn't touch them either: it's all HTTPS.
+
+So an agent in auto mode, one prompt injection away from a malicious web page or issue, could read your mail, post to Slack *as you*, or trash files in Drive. The fix is one setting that applies only to this unix account. The connectors keep working everywhere else you use Claude.
+
+**As ai-dev, turn the claude.ai connectors off and confirm they're gone:**
+
+```bash
+f=~/.claude/settings.json; [ -f "$f" ] || echo '{}' > "$f"
+jq '.env.ENABLE_CLAUDEAI_MCP_SERVERS = "false"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+claude mcp list        # expect no "claude.ai ..." entries
+```
+
+The service unit in step 5 sets the same variable, so the Remote Control sessions honor it too. For belt and braces, add a `permissions.deny` entry for each connector's tool prefix (for example `mcp__claude_ai_Gmail`), taking the names from what `claude mcp list` showed before you turned them off.
+
+The login shares more than connectors: plugins attached to your account sync in, and Claude Code sessions on the same account can list and message each other. None of that is as dangerous as connectors, but the complete fix for all of it is to **give the agent account its own Anthropic login**, with nothing attached.
 
 ## 4. GitHub Access, Scoped Down {#github-access}
 
@@ -206,6 +226,7 @@ ExecStart=%h/.local/bin/claude remote-control --name ai-dev-%i --spawn worktree 
 Restart=always
 RestartSec=10s
 Environment=PATH=%h/.local/bin:/snap/bin:/usr/local/bin:/usr/bin:/bin
+Environment=ENABLE_CLAUDEAI_MCP_SERVERS=false
 [Install]
 WantedBy=default.target
 EOF
@@ -275,11 +296,11 @@ cat ~/.ssh/id_ed25519_signing.pub
 
 ## 8. Secrets: What the Account Holds {#secrets}
 
-When you're done, ai-dev holds exactly three credentials. All are plain files readable only by the account (mode 600); a headless box has no keyring to put them in.
+When you're done, ai-dev holds exactly three credentials, and one of them is bigger than it looks. All are plain files readable only by the account (mode 600); a headless box has no keyring to put them in.
 
 | Secret | Where it lives | If it leaks, someone can… | Risk | Revoke |
 |---|---|---|---|---|
-| Claude login | `~/.claude/.credentials.json` | Run Claude Code on your subscription and burn your usage | Medium-high | `/logout`, or end the session in claude.ai settings |
+| Claude login | `~/.claude/.credentials.json` | Run Claude Code on your subscription and burn your usage. With connectors left on, also reach your mail, Drive, Slack and more ([step 3](#turn-off-connectors)) | Medium-high; **high** if connectors are on | `/logout`, or end the session in claude.ai settings |
 | GitHub token | `~/.config/gh/hosts.yml` | Push, open PRs and edit issues in the *selected repos only*, until it expires | Medium; low if `main` requires PRs | Delete the token on GitHub |
 | Signing key | `~/.ssh/id_ed25519_signing` | Make "Verified" commits in your name. It can't push or log in | Low-medium | Delete the signing key on GitHub |
 
@@ -291,7 +312,7 @@ When you're done, ai-dev holds exactly three credentials. All are plain files re
 - **Keep app secrets out of the account.** No `.env` files full of production keys in the clones or worktrees. If tests need credentials, use dev-only keys with low limits, or none. (I wrote this up as a standard of its own: [keep application secrets out of the developer's working tree](https://github.com/rmorison/engineering-standards/pull/46).)
 - **Know your revocation drill.** If the box is ever compromised, work down the table: log out Claude, delete the GitHub token, delete the signing key. It takes about five minutes.
 
-What's deliberately *not* in the account matters just as much: no personal cloud keys, no mail, nothing from your own account. That absence is the real protection.
+What's deliberately *not* in the account matters just as much: no personal cloud keys, no mail, no connectors, nothing from your own account. That absence is the real protection.
 
 ## Using It {#using-it}
 
