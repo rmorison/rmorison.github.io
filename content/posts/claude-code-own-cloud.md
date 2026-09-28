@@ -169,7 +169,7 @@ Every agent here draws on your one subscription's usage limits. That's worth kno
 
 Hat tip to u/bcRIPster, whose [PSA on r/ClaudeAI](https://www.reddit.com/r/ClaudeAI/comments/1wrr1z1/psa_for_anyone_using_claude_projects_to/) about claude.ai Projects quietly sharing account memory got me asking what else a Claude login carries along. The answer for this setup: a lot.
 
-Logging in with your claude.ai account brings the account's **connectors** with it. Whatever you've connected on claude.ai (Gmail, Google Drive, Calendar, Slack, Dropbox, your accounting system) shows up as tools in every Claude Code session on that login, on any machine. Run `claude mcp list` as ai-dev and look. I found nine, all connected. The unix account boundary doesn't touch them, because the access rides on the Claude login, not on files. The firewall doesn't touch them either: it's all HTTPS.
+Logging in with your claude.ai account brings the account's **connectors** with it. Whatever you've connected on claude.ai (Gmail, Google Drive, Calendar, Slack, Dropbox) shows up as tools in every Claude Code session on that login, on any machine. Run `claude mcp list` as ai-dev and look. I found them, all connected. The unix account boundary doesn't touch them, because the access rides on the Claude login, not on files. The firewall doesn't touch them either: it's all HTTPS.
 
 So an agent in auto mode, one prompt injection away from a malicious web page or issue, could read your mail, post to Slack *as you*, or trash files in Drive. The fix is one setting that applies only to this unix account. The connectors keep working everywhere else you use Claude.
 
@@ -181,9 +181,9 @@ jq '.env.ENABLE_CLAUDEAI_MCP_SERVERS = "false"' "$f" > "$f.tmp" && mv "$f.tmp" "
 claude mcp list        # expect no "claude.ai ..." entries
 ```
 
-The service unit in step 5 sets the same variable, so the Remote Control sessions honor it too. For belt and braces, add a `permissions.deny` entry for each connector's tool prefix (for example `mcp__claude_ai_Gmail`), taking the names from what `claude mcp list` showed before you turned them off.
+The service unit in step 5 sets the same variable, so the Remote Control sessions honor it too. For added peace of mind, add a `permissions.deny` entry for each connector's tool prefix (for example `mcp__claude_ai_Gmail`), taking the names from what `claude mcp list` showed before you turned them off.
 
-The login shares more than connectors: plugins attached to your account sync in, and Claude Code sessions on the same account can list and message each other. None of that is as dangerous as connectors, but the complete fix for all of it is to **give the agent account its own Anthropic login**, with nothing attached.
+The login shares more than connectors: plugins attached to your account sync in, and Claude Code sessions on the same account can list and message each other. None of that is as dangerous as connectors.
 
 ## 4. GitHub Access, Scoped Down {#github-access}
 
