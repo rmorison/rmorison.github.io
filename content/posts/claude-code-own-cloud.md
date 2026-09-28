@@ -167,7 +167,7 @@ Every agent here draws on your one subscription's usage limits. That's worth kno
 
 ### Turn Off Your claude.ai Connectors {#turn-off-connectors}
 
-This is the step I missed the first time, and it's the most important one in the post.
+Hat tip to u/bcRIPster, whose [PSA on r/ClaudeAI](https://www.reddit.com/r/ClaudeAI/comments/1wrr1z1/psa_for_anyone_using_claude_projects_to/) about claude.ai Projects quietly sharing account memory got me asking what else a Claude login carries along. The answer for this setup: a lot.
 
 Logging in with your claude.ai account brings the account's **connectors** with it. Whatever you've connected on claude.ai (Gmail, Google Drive, Calendar, Slack, Dropbox, your accounting system) shows up as tools in every Claude Code session on that login, on any machine. Run `claude mcp list` as ai-dev and look. I found nine, all connected. The unix account boundary doesn't touch them, because the access rides on the Claude login, not on files. The firewall doesn't touch them either: it's all HTTPS.
 
