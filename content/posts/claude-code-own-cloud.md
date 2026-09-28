@@ -64,7 +64,7 @@ sudo systemctl set-property user-$(id -u ai-dev).slice MemoryMax=12G CPUQuota=50
 
 - **No password, no sudo, no groups.** Watch out for `docker` in particular: membership in it is root in all but name.
 - **No SSH keys either.** I get in from my own account with `sudo -iu ai-dev`. Remote Control only makes outbound connections, so the account never needs to accept a login.
-- **Linger** keeps ai-dev's services running across reboots and logouts. By default, Linux ties a user's background services to their login: they start when you log in, stop when you log out, and don't come back after a reboot until you log in again. Fine for a desktop, but ai-dev never logs in; you just borrow its shell with `sudo`. Linger tells systemd to start its services at boot and keep them running regardless, so the Remote Control servers in step 5 behave like always-on server software.
+- **Linger** keeps ai-dev's services running across reboots and logouts. By default, Linux ties a user's background services to their login: they start when you log in, stop when you log out, and don't come back after a reboot until you log in again. Fine for a desktop, but ai-dev never logs in; you just borrow its shell with `sudo`. Linger tells systemd to start its services at boot and keep them running regardless, so the Remote Control servers in step 6 behave like always-on server software.
 - **The slice caps** memory and CPU (5 of 8 cores here), so a runaway test suite can't starve everything else on the box.
 
 ## 2. An Egress Firewall for That Account Only {#an-egress-firewall}
@@ -138,7 +138,7 @@ sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/github.com/22' && echo OPEN |
 sudo -u ai-dev timeout 5 bash -c 'exec 3<>/dev/tcp/gitlab.com/22' && echo OPEN || echo BLOCKED
 ```
 
-**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail. (Mail, Drive and friends come with one big asterisk: your Claude login's connectors, which [step 3](#turn-off-connectors) turns off.) The secrets it *does* hold are covered in [step 8](#secrets).
+**Be honest with yourself about what this does and doesn't buy.** With 443 open to the world, an agent can still upload anything it can read to any website. The firewall protects *your other services* and your IP's reputation. What protects your *data* is the account boundary: ai-dev simply can't read your home directory, your secrets or your mail. (Mail, Drive and friends come with one big asterisk: your Claude login's connectors, which [step 4](#cut-the-logins-reach) turns off.) The secrets it *does* hold are covered in [step 9](#secrets).
 
 ## 3. Install Claude Code and Log In {#install-claude-code}
 
@@ -165,9 +165,11 @@ Inside `claude`, run `/login` and pick the **Claude account with subscription**.
 
 Every agent here draws on your one subscription's usage limits. That's worth knowing before you start several at once.
 
-### Turn Off Your claude.ai Connectors {#turn-off-connectors}
+## 4. Cut the Login's Reach {#cut-the-logins-reach}
 
-Hat tip to u/bcRIPster, whose [PSA on r/ClaudeAI](https://www.reddit.com/r/ClaudeAI/comments/1wrr1z1/psa_for_anyone_using_claude_projects_to/) about claude.ai Projects quietly sharing account memory got me asking what else a Claude login carries along. The answer for this setup: a lot.
+Hat tip to u/bcRIPster, whose [PSA on r/ClaudeAI](https://www.reddit.com/r/ClaudeAI/comments/1wrr1z1/psa_for_anyone_using_claude_projects_to/) about claude.ai Projects quietly sharing account memory got me asking what else a Claude login carries along. The answer for this setup: a lot. Your Claude login isn't just a key to your subscription. It brings account-level features with it that go straight around the unix account and the firewall.
+
+### Connectors {#turn-off-connectors}
 
 Logging in with your claude.ai account brings the account's **connectors** with it. Whatever you've connected on claude.ai (Gmail, Google Drive, Calendar, Slack, Dropbox) shows up as tools in every Claude Code session on that login, on any machine. Run `claude mcp list` as ai-dev and look. I found them, all connected. The unix account boundary doesn't touch them, because the access rides on the Claude login, not on files. The firewall doesn't touch them either: it's all HTTPS.
 
@@ -181,7 +183,9 @@ jq '.env.ENABLE_CLAUDEAI_MCP_SERVERS = "false"' "$f" > "$f.tmp" && mv "$f.tmp" "
 claude mcp list        # expect no "claude.ai ..." entries
 ```
 
-The service unit in step 5 sets the same variable, so the Remote Control sessions honor it too. For added peace of mind, add a `permissions.deny` entry for each connector's tool prefix (for example `mcp__claude_ai_Gmail`), taking the names from what `claude mcp list` showed before you turned them off.
+The service unit in step 6 sets the same variable, so the Remote Control sessions honor it too. For added peace of mind, add a `permissions.deny` entry for each connector's tool prefix (for example `mcp__claude_ai_Gmail`), taking the names from what `claude mcp list` showed before you turned them off.
+
+### Cross-Session Messaging {#cross-session-messaging}
 
 The login shares more than connectors. Plugins attached to your account sync in, but they run inside the sandbox. The one to watch is **cross-session messaging**: Claude Code sessions on the same login can list and message each other, across machines and unix users. By default, a message from a session in the same permission class (auto and ordinary prompting count as one) goes straight into the receiving agent's conversation, with no approval. A hijacked agent here could message your other sessions, and they could message it.
 
@@ -196,7 +200,7 @@ jq '.crossSessionInbound = "refuse"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
 
 I tested both. Sends to the agent account now fail outright ("can't receive cross-session messages"), and a message to a session on my laptop was parked for approval instead of reaching Claude. Both took effect on sessions that were already running.
 
-## 4. GitHub Access, Scoped Down {#github-access}
+## 5. GitHub Access, Scoped Down {#github-access}
 
 **Create a fine-grained personal access token** for ai-dev, not your everyday credentials. On GitHub: Settings → Developer settings → Fine-grained tokens → Generate new token:
 
@@ -219,7 +223,7 @@ gh repo clone <owner>/<repo>
 
 Pasting the token at `gh`'s prompt keeps it out of your shell history and process list. The `~/projects/github.com/<owner>/<repo>` layout is borrowed from Go's module paths: the path tells you the remote, and the remote tells you the path.
 
-## 5. One Remote Control Service per Repo {#remote-control-service}
+## 6. One Remote Control Service per Repo {#remote-control-service}
 
 A systemd **template unit** gives you one Remote Control server per repo, each named after it.
 
@@ -272,7 +276,7 @@ f=~/.claude/settings.json; [ -f "$f" ] || echo '{}' > "$f"
 jq '.permissions.defaultMode = "auto"' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
 ```
 
-## 6. Plugins, Installed Once {#plugins}
+## 7. Plugins, Installed Once {#plugins}
 
 Plugins installed at **user scope** apply to every session the account starts, in every repo. I use Every's [Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin: a brainstorm → plan → build → review → capture-learnings loop.
 
@@ -286,7 +290,7 @@ systemctl --user restart 'claude-rc@*'
 
 Sessions that were already open before the restart won't see new plugins; new ones will. Plugins attached to your claude.ai account also sync onto the box, and `claude plugin list` shows which copy wins when the names collide.
 
-## 7. Signed Commits {#signed-commits}
+## 8. Signed Commits {#signed-commits}
 
 Cloud sessions produce "Verified" commits. Yours can too, with an SSH signing key.
 
@@ -305,13 +309,13 @@ cat ~/.ssh/id_ed25519_signing.pub
 
 **Then register the printed public key on GitHub:** Settings → SSH and GPG keys → **New SSH key** (not the GPG form), set **Key type: Signing Key**, paste the whole line, and save. A signing key can sign commits but can't log in or push. There's no passphrase because unattended agents can't type one; if the box is ever compromised, delete the key on GitHub and it's dead. Git reads its config on every run, so already-running sessions pick this up with no restart.
 
-## 8. Secrets: What the Account Holds {#secrets}
+## 9. Secrets: What the Account Holds {#secrets}
 
 When you're done, ai-dev holds exactly three credentials, and one of them is bigger than it looks. All are plain files readable only by the account (mode 600); a headless box has no keyring to put them in.
 
 | Secret | Where it lives | If it leaks, someone can… | Risk | Revoke |
 |---|---|---|---|---|
-| Claude login | `~/.claude/.credentials.json` | Run Claude Code on your subscription and burn your usage. With connectors left on, also reach your mail, Drive, Slack and more ([step 3](#turn-off-connectors)) | Medium-high; **high** if connectors are on | `/logout`, or end the session in claude.ai settings |
+| Claude login | `~/.claude/.credentials.json` | Run Claude Code on your subscription and burn your usage. With connectors left on, also reach your mail, Drive, Slack and more ([step 4](#cut-the-logins-reach)) | Medium-high; **high** if connectors are on | `/logout`, or end the session in claude.ai settings |
 | GitHub token | `~/.config/gh/hosts.yml` | Push, open PRs and edit issues in the *selected repos only*, until it expires | Medium; low if `main` requires PRs | Delete the token on GitHub |
 | Signing key | `~/.ssh/id_ed25519_signing` | Make "Verified" commits in your name. It can't push or log in | Low-medium | Delete the signing key on GitHub |
 
